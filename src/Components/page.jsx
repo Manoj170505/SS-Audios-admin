@@ -1099,9 +1099,9 @@ const MediaManager = ({ onLogout }) => {
 
                         {/* CREATE SERVICE MODAL */}
                         {isAddingService && (
-                            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-                                <div className="bg-[#1C1717] border border-[#f70776]/40 rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl space-y-5 my-8">
-                                    <div className="flex items-center justify-between border-b border-[#2B2323] pb-3">
+                            <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+                                <div className="relative bg-[#1C1717] border border-[#f70776]/50 rounded-3xl p-5 sm:p-7 max-w-xl w-full shadow-2xl space-y-4 my-auto max-h-[92vh] flex flex-col">
+                                    <div className="shrink-0 flex items-center justify-between border-b border-[#2B2323] pb-3">
                                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                             <span>✨</span> Add New DJ Service
                                         </h3>
@@ -1113,7 +1113,7 @@ const MediaManager = ({ onLogout }) => {
                                         </button>
                                     </div>
 
-                                    <form onSubmit={handleCreateService} className="space-y-4">
+                                    <form onSubmit={handleCreateService} className="space-y-4 overflow-y-auto pr-1 flex-1">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs font-semibold text-gray-300 mb-1">Service Title</label>
@@ -1206,7 +1206,7 @@ const MediaManager = ({ onLogout }) => {
                                             />
                                         </div>
 
-                                        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2B2323]">
+                                        <div className="shrink-0 flex items-center justify-end gap-3 pt-3 border-t border-[#2B2323]">
                                             <button
                                                 type="button"
                                                 onClick={() => setIsAddingService(false)}
@@ -1229,9 +1229,9 @@ const MediaManager = ({ onLogout }) => {
 
                         {/* EDIT SERVICE MODAL */}
                         {editingService && (
-                            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-                                <div className="bg-[#1C1717] border border-[#f70776]/40 rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl space-y-5 my-8">
-                                    <div className="flex items-center justify-between border-b border-[#2B2323] pb-3">
+                            <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+                                <div className="relative bg-[#1C1717] border border-[#f70776]/50 rounded-3xl p-5 sm:p-7 max-w-xl w-full shadow-2xl space-y-4 my-auto max-h-[92vh] flex flex-col">
+                                    <div className="shrink-0 flex items-center justify-between border-b border-[#2B2323] pb-3">
                                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                             <span>✏️</span> Edit Service: {editingService.title}
                                         </h3>
@@ -1243,7 +1243,7 @@ const MediaManager = ({ onLogout }) => {
                                         </button>
                                     </div>
 
-                                    <form onSubmit={handleSaveService} className="space-y-4">
+                                    <form onSubmit={handleSaveService} className="space-y-4 overflow-y-auto pr-1 flex-1">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs font-semibold text-gray-300 mb-1">Service Title</label>
@@ -1337,7 +1337,7 @@ const MediaManager = ({ onLogout }) => {
                                             />
                                         </div>
 
-                                        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2B2323]">
+                                        <div className="shrink-0 flex items-center justify-end gap-3 pt-3 border-t border-[#2B2323]">
                                             <button
                                                 type="button"
                                                 onClick={() => setEditingService(null)}
@@ -1497,9 +1497,9 @@ const MediaManager = ({ onLogout }) => {
 
                         {/* CREATE PRICING PLAN MODAL */}
                         {isAddingPlan && (
-                            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-                                <div className="bg-[#1C1717] border border-[#f70776]/40 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-5 my-8">
-                                    <div className="flex items-center justify-between border-b border-[#2B2323] pb-3">
+                            <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+                                <div className="relative bg-[#1C1717] border border-[#f70776]/50 rounded-3xl p-5 sm:p-7 max-w-2xl w-full shadow-2xl space-y-4 my-auto max-h-[92vh] flex flex-col">
+                                    <div className="shrink-0 flex items-center justify-between border-b border-[#2B2323] pb-3">
                                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                             <span>✨</span> Add New Pricing Plan
                                         </h3>
@@ -1511,7 +1511,7 @@ const MediaManager = ({ onLogout }) => {
                                         </button>
                                     </div>
 
-                                    <form onSubmit={handleCreatePlan} className="space-y-4">
+                                    <form onSubmit={handleCreatePlan} className="space-y-4 overflow-y-auto pr-1 flex-1">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs font-semibold text-gray-300 mb-1">Plan Name</label>
@@ -1699,7 +1699,7 @@ const MediaManager = ({ onLogout }) => {
                                                     <div key={fIdx} className="flex items-center gap-2 bg-black/30 p-2 rounded-xl border border-gray-800">
                                                         <button
                                                             type="button"
-                                                            onClick={() => {
+                                                             onClick={() => {
                                                                 const updated = [...newPlan.features];
                                                                 updated[fIdx].included = !updated[fIdx].included;
                                                                 setNewPlan({ ...newPlan, features: updated });
@@ -1735,7 +1735,7 @@ const MediaManager = ({ onLogout }) => {
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2B2323]">
+                                        <div className="shrink-0 flex items-center justify-end gap-3 pt-3 border-t border-[#2B2323]">
                                             <button
                                                 type="button"
                                                 onClick={() => setIsAddingPlan(false)}
@@ -1758,9 +1758,9 @@ const MediaManager = ({ onLogout }) => {
 
                         {/* EDIT PRICING PLAN MODAL */}
                         {editingPlan && (
-                            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-                                <div className="bg-[#1C1717] border border-[#f70776]/40 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-5 my-8">
-                                    <div className="flex items-center justify-between border-b border-[#2B2323] pb-3">
+                            <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+                                <div className="relative bg-[#1C1717] border border-[#f70776]/50 rounded-3xl p-5 sm:p-7 max-w-2xl w-full shadow-2xl space-y-4 my-auto max-h-[92vh] flex flex-col">
+                                    <div className="shrink-0 flex items-center justify-between border-b border-[#2B2323] pb-3">
                                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                             <span>🎚️</span> Edit Plan: {editingPlan.name}
                                         </h3>
@@ -1772,7 +1772,7 @@ const MediaManager = ({ onLogout }) => {
                                         </button>
                                     </div>
 
-                                    <form onSubmit={handleSavePlan} className="space-y-4">
+                                    <form onSubmit={handleSavePlan} className="space-y-4 overflow-y-auto pr-1 flex-1">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs font-semibold text-gray-300 mb-1">Plan Name</label>
@@ -2002,7 +2002,7 @@ const MediaManager = ({ onLogout }) => {
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2B2323]">
+                                        <div className="shrink-0 flex items-center justify-end gap-3 pt-3 border-t border-[#2B2323]">
                                             <button
                                                 type="button"
                                                 onClick={() => setEditingPlan(null)}
