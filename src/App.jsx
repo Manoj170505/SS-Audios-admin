@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import LoginPage from './Components/login';
 import MediaManager from './Components/page';
-import AdminIntroLoader from './Components/AdminIntroLoader';
 
 const App = () => {
-  const [isIntroActive, setIsIntroActive] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('soundscape_admin_auth') === 'true';
   });
@@ -21,25 +19,32 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-[#141010] relative overflow-hidden">
-      {/* 1. Cinematic Startup Retro Wave & Audio Visualizer Intro Animation */}
-      {isIntroActive && (
-        <AdminIntroLoader onComplete={() => setIsIntroActive(false)} />
-      )}
+      <style>{`
+        @keyframes adminPanelArrive {
+          0% {
+            opacity: 0;
+            transform: scale(0.95) translateY(24px);
+            filter: blur(8px);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            filter: blur(0);
+          }
+        }
 
-      {/* 2. Main Admin App Surface (Smoothly Appears after Intro Kickstart) */}
-      <div
-        className={`transition-all duration-1000 transform ${
-          isIntroActive
-            ? 'opacity-0 scale-95 pointer-events-none'
-            : 'opacity-100 scale-100'
-        }`}
-      >
-        {isAuthenticated ? (
+        .admin-panel-enter {
+          animation: adminPanelArrive 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
+
+      {isAuthenticated ? (
+        <div className="admin-panel-enter">
           <MediaManager onLogout={handleLogout} />
-        ) : (
-          <LoginPage onLoginSuccess={handleLoginSuccess} />
-        )}
-      </div>
+        </div>
+      ) : (
+        <LoginPage onLoginSuccess={handleLoginSuccess} />
+      )}
     </div>
   );
 };
