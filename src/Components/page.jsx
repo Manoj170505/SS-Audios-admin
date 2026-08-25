@@ -124,7 +124,9 @@ const MediaManager = ({ onLogout }) => {
 
     // Booking Inquiries State
     const [inquiries, setInquiries] = useState([]);
+    const [selectedInquiries, setSelectedInquiries] = useState([]);
     const [isLoadingInquiries, setIsLoadingInquiries] = useState(false);
+    const [isDeletingInquiries, setIsDeletingInquiries] = useState(false);
 
     // Fetch inquiries from backend
     const fetchInquiries = async () => {
@@ -142,6 +144,20 @@ const MediaManager = ({ onLogout }) => {
         }
     };
 
+    const handleToggleSelectInquiry = (id) => {
+        setSelectedInquiries(prev => 
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
+    const handleSelectAllInquiries = () => {
+        if (selectedInquiries.length === inquiries.length && inquiries.length > 0) {
+            setSelectedInquiries([]);
+        } else {
+            setSelectedInquiries(inquiries.map(inq => inq.id));
+        }
+    };
+
     const handleDeleteInquiry = async (id) => {
         if (!window.confirm('Are you sure you want to delete this booking inquiry?')) return;
         try {
@@ -149,10 +165,41 @@ const MediaManager = ({ onLogout }) => {
             const data = await res.json();
             if (data.success) {
                 setInquiries(prev => prev.filter(inq => inq.id !== id));
+                setSelectedInquiries(prev => prev.filter(item => item !== id));
                 showNotification('Inquiry deleted successfully');
             }
         } catch (err) {
             showNotification('Failed to delete inquiry', 'error');
+        }
+    };
+
+    const handleBulkDeleteInquiries = async () => {
+        if (selectedInquiries.length === 0) return;
+        const confirmMsg = selectedInquiries.length === inquiries.length
+            ? `Are you sure you want to delete all ${selectedInquiries.length} inquiries?`
+            : `Are you sure you want to delete ${selectedInquiries.length} selected inquiries?`;
+        
+        if (!window.confirm(confirmMsg)) return;
+
+        setIsDeletingInquiries(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/inquiries/bulk-delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: selectedInquiries })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setInquiries(prev => prev.filter(inq => !selectedInquiries.includes(inq.id)));
+                setSelectedInquiries([]);
+                showNotification(`Deleted ${selectedInquiries.length} inquiries successfully`);
+            } else {
+                showNotification(data.message || 'Failed to delete inquiries', 'error');
+            }
+        } catch (err) {
+            showNotification('Error deleting inquiries', 'error');
+        } finally {
+            setIsDeletingInquiries(false);
         }
     };
 
@@ -1990,12 +2037,59 @@ const MediaManager = ({ onLogout }) => {
                                     Direct leads submitted from the Soundscape website contact form.
                                 </p>
                             </div>
-                            <button
-                                onClick={fetchInquiries}
-                                className="px-3 py-1.5 bg-[#1C1717] hover:bg-[#2B2323] border border-[#2B2323] text-gray-300 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                            >
-                                <span>↻</span> Refresh Inquiries
-                            </button>
+
+                            <div className="flex items-center gap-2.5 flex-wrap">
+                                {inquiries.length > 0 && (
+                                    <>
+                                        {/* Select All Button */}
+                                        <button
+                                            type="button"
+                                            onClick={handleSelectAllInquiries}
+                                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer border ${
+                                                selectedInquiries.length === inquiries.length && inquiries.length > 0
+                                                    ? 'bg-[#f70776] text-white border-[#f70776] shadow-md shadow-[#f70776]/20'
+                                                    : 'bg-[#1C1717] hover:bg-[#2B2323] text-gray-300 border-[#2B2323]'
+                                            }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedInquiries.length === inquiries.length && inquiries.length > 0}
+                                                onChange={handleSelectAllInquiries}
+                                                className="accent-[#f70776] cursor-pointer rounded"
+                                            />
+                                            <span>
+                                                {selectedInquiries.length === inquiries.length && inquiries.length > 0
+                                                    ? `Deselect All (${selectedInquiries.length})`
+                                                    : `Select All (${selectedInquiries.length}/${inquiries.length})`}
+                                            </span>
+                                        </button>
+
+                                        {/* Delete Selected Button */}
+                                        {selectedInquiries.length > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={handleBulkDeleteInquiries}
+                                                disabled={isDeletingInquiries}
+                                                className="px-3.5 py-1.5 bg-gradient-to-r from-red-600 to-[#f70776] hover:from-red-700 hover:to-[#c3195d] text-white rounded-xl text-xs font-bold shadow-lg shadow-red-500/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                            >
+                                                <span>🗑️</span>
+                                                <span>
+                                                    {isDeletingInquiries
+                                                        ? 'Deleting...'
+                                                        : `Delete Selected (${selectedInquiries.length})`}
+                                                </span>
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+
+                                <button
+                                    onClick={fetchInquiries}
+                                    className="px-3 py-1.5 bg-[#1C1717] hover:bg-[#2B2323] border border-[#2B2323] text-gray-300 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                                >
+                                    <span>↻</span> Refresh Inquiries
+                                </button>
+                            </div>
                         </div>
 
                         {isLoadingInquiries ? (
@@ -2013,93 +2107,108 @@ const MediaManager = ({ onLogout }) => {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                {inquiries.map((inq) => (
-                                    <div
-                                        key={inq.id}
-                                        className="bg-[#1C1717] border border-[#2B2323] hover:border-[#f70776]/40 rounded-3xl p-6 shadow-xl space-y-4 transition-all"
-                                    >
-                                        {/* Header */}
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div>
-                                                <h4 className="text-lg font-black text-white">{inq.fullName}</h4>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider bg-[#f70776]/20 text-[#f70776] border border-[#f70776]/30 px-2.5 py-0.5 rounded-full">
-                                                        {inq.eventType || 'Event'}
-                                                    </span>
-                                                    <span className="text-[11px] text-gray-400">
-                                                        {inq.createdAt ? new Date(inq.createdAt).toLocaleString() : 'Recent'}
-                                                    </span>
+                                {inquiries.map((inq) => {
+                                    const isSelected = selectedInquiries.includes(inq.id);
+                                    return (
+                                        <div
+                                            key={inq.id}
+                                            className={`rounded-3xl p-6 shadow-xl space-y-4 transition-all border ${
+                                                isSelected
+                                                    ? 'bg-[#221717] border-[#f70776] ring-2 ring-[#f70776]/30'
+                                                    : 'bg-[#1C1717] border-[#2B2323] hover:border-[#f70776]/40'
+                                            }`}
+                                        >
+                                            {/* Header with Checkbox */}
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="flex items-start gap-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => handleToggleSelectInquiry(inq.id)}
+                                                        className="mt-1 w-4 h-4 accent-[#f70776] rounded cursor-pointer"
+                                                    />
+                                                    <div>
+                                                        <h4 className="text-lg font-black text-white">{inq.fullName}</h4>
+                                                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#f70776]/20 text-[#f70776] border border-[#f70776]/30 px-2.5 py-0.5 rounded-full">
+                                                                {inq.eventType || 'Event'}
+                                                            </span>
+                                                            <span className="text-[11px] text-gray-400">
+                                                                {inq.createdAt ? new Date(inq.createdAt).toLocaleString() : 'Recent'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
+                                                <button
+                                                    onClick={() => handleDeleteInquiry(inq.id)}
+                                                    className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer"
+                                                    title="Delete Inquiry"
+                                                >
+                                                    ✕
+                                                </button>
                                             </div>
-                                            <button
-                                                onClick={() => handleDeleteInquiry(inq.id)}
-                                                className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer"
-                                                title="Delete Inquiry"
-                                            >
-                                                ✕
-                                            </button>
-                                        </div>
 
-                                        {/* Contact Badges */}
-                                        <div className="flex flex-wrap gap-2 text-xs">
-                                            <a
-                                                href={`mailto:${inq.email}`}
-                                                className="px-3 py-1 bg-black/40 border border-gray-800 hover:border-[#f70776]/60 rounded-xl text-gray-300 hover:text-white transition-colors flex items-center gap-1.5"
-                                            >
-                                                <span>✉️</span> {inq.email}
-                                            </a>
-                                            {inq.phone && (
+                                            {/* Contact Badges */}
+                                            <div className="flex flex-wrap gap-2 text-xs">
                                                 <a
-                                                    href={`tel:${inq.phone}`}
+                                                    href={`mailto:${inq.email}`}
                                                     className="px-3 py-1 bg-black/40 border border-gray-800 hover:border-[#f70776]/60 rounded-xl text-gray-300 hover:text-white transition-colors flex items-center gap-1.5"
                                                 >
-                                                    <span>📞</span> {inq.phone}
+                                                    <span>✉️</span> {inq.email}
                                                 </a>
-                                            )}
-                                        </div>
+                                                {inq.phone && (
+                                                    <a
+                                                        href={`tel:${inq.phone}`}
+                                                        className="px-3 py-1 bg-black/40 border border-gray-800 hover:border-[#f70776]/60 rounded-xl text-gray-300 hover:text-white transition-colors flex items-center gap-1.5"
+                                                    >
+                                                        <span>📞</span> {inq.phone}
+                                                    </a>
+                                                )}
+                                            </div>
 
-                                        {/* Required Services */}
-                                        {Array.isArray(inq.services) && inq.services.length > 0 && (
-                                            <div className="space-y-1">
-                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Required Services:</span>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {inq.services.map((srv, sIdx) => (
-                                                        <span key={sIdx} className="text-[10px] font-semibold bg-[#2B2323] text-gray-300 px-2 py-0.5 rounded-md">
-                                                            {srv}
-                                                        </span>
-                                                    ))}
+                                            {/* Required Services */}
+                                            {Array.isArray(inq.services) && inq.services.length > 0 && (
+                                                <div className="space-y-1">
+                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Required Services:</span>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {inq.services.map((srv, sIdx) => (
+                                                            <span key={sIdx} className="text-[10px] font-semibold bg-[#2B2323] text-gray-300 px-2 py-0.5 rounded-md">
+                                                                {srv}
+                                                            </span>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
-
-                                        {/* Message Body */}
-                                        {inq.message && (
-                                            <div className="p-3 bg-black/40 border border-gray-800 rounded-xl text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">
-                                                {inq.message}
-                                            </div>
-                                        )}
-
-                                        {/* Action Bar */}
-                                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#2B2323]">
-                                            {inq.phone && (
-                                                <a
-                                                    href={`https://wa.me/${inq.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${inq.fullName}, thank you for contacting Soundscape! We received your booking request for ${inq.eventType}.`)}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="px-3 py-1.5 bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/40 text-[#25D366] rounded-xl text-xs font-bold transition-all flex items-center gap-1"
-                                                >
-                                                    <span>💬 WhatsApp</span>
-                                                </a>
                                             )}
-                                            <a
-                                                href={`mailto:${inq.email}?subject=${encodeURIComponent(`Soundscape Booking: ${inq.eventType}`)}`}
-                                                className="px-4 py-1.5 bg-[#f70776] hover:bg-[#c3195d] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1"
-                                            >
-                                                <span>Reply via Email</span>
-                                            </a>
+
+                                            {/* Message Body */}
+                                            {inq.message && (
+                                                <div className="p-3 bg-black/40 border border-gray-800 rounded-xl text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                                    {inq.message}
+                                                </div>
+                                            )}
+
+                                            {/* Action Bar */}
+                                            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#2B2323]">
+                                                {inq.phone && (
+                                                    <a
+                                                        href={`https://wa.me/${inq.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${inq.fullName}, thank you for contacting Soundscape! We received your booking request for ${inq.eventType}.`)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="px-3 py-1.5 bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/40 text-[#25D366] rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                                    >
+                                                        <span>💬 WhatsApp</span>
+                                                    </a>
+                                                )}
+                                                <a
+                                                    href={`mailto:${inq.email}?subject=${encodeURIComponent(`Soundscape Booking: ${inq.eventType}`)}`}
+                                                    className="px-4 py-1.5 bg-[#f70776] hover:bg-[#c3195d] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                                >
+                                                    <span>Reply via Email</span>
+                                                </a>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
