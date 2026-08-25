@@ -8,45 +8,45 @@ const LoginPage = ({ onLoginSuccess }) => {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    
-    // Animation States: 'idle' | 'success_dropping' | 'wrong_crashing' | 'wrong_shattered'
-    const [noteAnimState, setNoteAnimState] = useState('idle');
+
+    // Animation States: 'idle' | 'turntable_spinning' | 'success_playing' | 'wrong_scratching' | 'wrong_stopped'
+    const [turntableState, setTurntableState] = useState('idle');
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-        if (error || noteAnimState !== 'idle') {
+        if (error || turntableState !== 'idle') {
             setError('');
-            setNoteAnimState('idle');
+            setTurntableState('idle');
         }
     };
 
     const handleInvalidCredentials = (msg) => {
         setIsLoading(false);
-        setNoteAnimState('wrong_crashing');
+        setTurntableState('wrong_scratching');
 
-        // Note falls and shatters on impact
+        // Needle scratches violently and stops
         setTimeout(() => {
-            setNoteAnimState('wrong_shattered');
+            setTurntableState('wrong_stopped');
             setError(msg || 'Wrong Credentials');
-        }, 420);
+        }, 450);
 
-        // Reset note after displaying shatter for 2.2s
+        // Reset state after 2.6s
         setTimeout(() => {
-            setNoteAnimState('idle');
-        }, 2600);
+            setTurntableState('idle');
+        }, 3000);
     };
 
     const handleSuccessCredentials = () => {
         setIsLoading(false);
-        setNoteAnimState('success_dropping');
+        setTurntableState('success_playing');
         setError('');
 
-        // Music symbol falls, resonates in signature pink #f70776 and opens Admin Panel
+        // Needle drops cleanly, vinyl spins with brand pink soundwaves and opens studio
         setTimeout(() => {
             if (onLoginSuccess) {
                 onLoginSuccess(formData);
             }
-        }, 1100);
+        }, 1150);
     };
 
     const handleSubmit = (e) => {
@@ -60,7 +60,7 @@ const LoginPage = ({ onLoginSuccess }) => {
         }
 
         setIsLoading(true);
-        setNoteAnimState('idle');
+        setTurntableState('turntable_spinning');
 
         setTimeout(() => {
             if (inputEmail === ADMIN_EMAIL && inputPassword === ADMIN_PASSWORD) {
@@ -68,119 +68,105 @@ const LoginPage = ({ onLoginSuccess }) => {
             } else {
                 handleInvalidCredentials('Wrong Credentials');
             }
-        }, 300);
+        }, 350);
     };
 
     return (
         <div className="relative min-h-screen bg-[#141010] flex items-center justify-center p-4 sm:p-6 font-sans overflow-hidden">
-            {/* Custom Music Note Drop, Resonate & Shatter Keyframes */}
+            {/* Custom Vinyl Turntable & Needle Scratch Keyframes */}
             <style>{`
-                /* SUCCESS DROP & BOUNCE IN BRAND PINK #f70776 */
-                @keyframes noteDropSuccessPink {
+                /* CONTINUOUS VINYL SPIN */
+                @keyframes vinylSpin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+
+                /* FAST VINYL SPIN ON SUCCESS */
+                @keyframes vinylSpinFast {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(720deg); }
+                }
+
+                /* VINYL ABRUPT SKID STOP */
+                @keyframes vinylSkidStop {
+                    0% { transform: rotate(0deg); }
+                    60% { transform: rotate(180deg); }
+                    85% { transform: rotate(240deg) skewX(-2deg); }
+                    100% { transform: rotate(250deg); }
+                }
+
+                /* TONEARM NEEDLE DROP ON SUCCESS */
+                @keyframes tonearmDropSuccess {
                     0% {
-                        transform: translateY(-90px) scale(0.6) rotate(-12deg);
-                        opacity: 0;
+                        transform: rotate(-35deg);
+                        transform-origin: 85% 15%;
                     }
-                    45% {
-                        transform: translateY(20px) scale(1.1) rotate(6deg);
-                        opacity: 1;
+                    60% {
+                        transform: rotate(0deg);
+                        transform-origin: 85% 15%;
                     }
-                    65% {
-                        transform: translateY(-5px) scale(0.95) rotate(-2deg);
-                    }
-                    85% {
-                        transform: translateY(12px) scale(1.05) rotate(0deg);
+                    80% {
+                        transform: rotate(-3deg);
+                        transform-origin: 85% 15%;
                     }
                     100% {
-                        transform: translateY(8px) scale(1.2);
-                        opacity: 1;
-                        filter: drop-shadow(0 0 35px #f70776) brightness(1.3);
+                        transform: rotate(0deg);
+                        transform-origin: 85% 15%;
                     }
                 }
 
-                /* SONIC RIPPLE WAVES ON SUCCESS */
-                @keyframes sonicRingPulsePink {
+                /* TONEARM SCRATCH SKID ON ERROR */
+                @keyframes tonearmScratchSkid {
                     0% {
-                        transform: scale(0.2);
-                        opacity: 1;
+                        transform: rotate(-25deg);
+                        transform-origin: 85% 15%;
+                    }
+                    35% {
+                        transform: rotate(5deg);
+                        transform-origin: 85% 15%;
+                    }
+                    60% {
+                        transform: rotate(-18deg);
+                        transform-origin: 85% 15%;
                     }
                     100% {
-                        transform: scale(3);
-                        opacity: 0;
+                        transform: rotate(8deg);
+                        transform-origin: 85% 15%;
                     }
                 }
 
-                /* WRONG CREDENTIAL DROP WITH HARD ACCELERATION */
-                @keyframes noteDropCrashRed {
+                /* DJ BEAT SOUNDWAVE EXPANSION IN PINK #f70776 */
+                @keyframes soundwavePulsePink {
                     0% {
-                        transform: translateY(-90px) scale(0.8) rotate(10deg);
-                        opacity: 0;
-                    }
-                    30% {
-                        opacity: 1;
+                        transform: scale(0.6);
+                        opacity: 0.9;
                     }
                     100% {
-                        transform: translateY(35px) scale(1) rotate(-8deg);
-                        opacity: 1;
-                    }
-                }
-
-                /* SHATTERED LEFT PIECE FLYING APART */
-                @keyframes shardFlyLeftRed {
-                    0% {
-                        transform: translate(0, 0) rotate(0deg) scale(1);
-                        opacity: 1;
-                    }
-                    45% {
-                        transform: translate(-30px, -15px) rotate(-40deg) scale(0.9);
-                        opacity: 1;
-                    }
-                    100% {
-                        transform: translate(-55px, 45px) rotate(-95deg) scale(0.5);
-                        opacity: 0;
-                    }
-                }
-
-                /* SHATTERED RIGHT PIECE FLYING APART */
-                @keyframes shardFlyRightRed {
-                    0% {
-                        transform: translate(0, 0) rotate(0deg) scale(1);
-                        opacity: 1;
-                    }
-                    45% {
-                        transform: translate(30px, -18px) rotate(45deg) scale(0.9);
-                        opacity: 1;
-                    }
-                    100% {
-                        transform: translate(60px, 50px) rotate(110deg) scale(0.5);
+                        transform: scale(2.6);
                         opacity: 0;
                     }
                 }
 
-                /* SHATTER CRACK FLASH */
-                @keyframes crackFlashRed {
+                /* NEEDLE SCRATCH SPARKS */
+                @keyframes needleSparkBurst {
                     0% {
-                        opacity: 0;
-                        transform: scale(0.4);
-                    }
-                    50% {
+                        transform: scale(0.3) rotate(0deg);
                         opacity: 1;
-                        transform: scale(1.3);
                     }
                     100% {
+                        transform: scale(2.2) rotate(45deg);
                         opacity: 0;
-                        transform: scale(2);
                     }
                 }
 
-                /* WRONG CREDENTIALS POP */
-                @keyframes wrongPopIn {
+                /* SCRATCH CUT GLITCH POP */
+                @keyframes scratchPopIn {
                     0% {
                         transform: scale(0.8);
                         opacity: 0;
                     }
-                    60% {
-                        transform: scale(1.05);
+                    50% {
+                        transform: scale(1.06);
                         opacity: 1;
                     }
                     100% {
@@ -199,7 +185,7 @@ const LoginPage = ({ onLoginSuccess }) => {
             <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#141010] via-transparent to-[#141010]/80 pointer-events-none" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#f70776]/10 rounded-full blur-[140px] pointer-events-none" />
 
-            {/* Main Login Card - Fixed Dimensions to Prevent Jumping/Resizing */}
+            {/* Main Login Card - Stably Proportioned */}
             <div className="relative z-10 bg-[#1C1717]/95 backdrop-blur-xl border border-[#2B2323] hover:border-[#f70776]/40 transition-colors duration-500 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col md:flex-row w-full max-w-4xl min-h-[560px] md:h-[580px]">
 
                 {/* Left Side: Visual / Hero Section */}
@@ -229,10 +215,10 @@ const LoginPage = ({ onLoginSuccess }) => {
                     </div>
                 </div>
 
-                {/* Right Side: Form Container with Locked Proportions */}
+                {/* Right Side: Form Container with Fixed Proportions */}
                 <div className="relative md:w-1/2 bg-[#1C1717]/95 p-8 sm:p-10 flex flex-col justify-between shrink-0 overflow-hidden border-t md:border-t-0 md:border-l border-[#2B2323]">
                     
-                    {/* Top Header Row */}
+                    {/* Top Header */}
                     <div>
                         <div className="flex justify-between items-center mb-6">
                             <div className="flex items-center space-x-2">
@@ -251,29 +237,29 @@ const LoginPage = ({ onLoginSuccess }) => {
 
                         <div>
                             <h2 className="text-2xl font-extrabold text-white mb-1">Welcome Back</h2>
-                            <p className="text-[#A69B9B] text-xs font-light">Enter credentials to unlock Soundscape Studio</p>
+                            <p className="text-[#A69B9B] text-xs font-light">Drop the needle to unlock Soundscape Studio</p>
                         </div>
                     </div>
 
-                    {/* Fixed Height Slot for Status Notifications (Zero Shift / Zero Resize) */}
+                    {/* Dedicated Notification Slot (Zero Shift / Zero Resize) */}
                     <div className="h-10 my-2 flex items-center justify-center shrink-0">
                         {error && (
                             <div
-                                className="w-full py-2 px-3 bg-red-950/80 border border-red-500/80 text-red-300 text-xs rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(239,68,68,0.4)]"
-                                style={{ animation: 'wrongPopIn 0.35s ease-out forwards' }}
+                                className="w-full py-2 px-3 bg-red-950/85 border border-red-500 text-red-300 text-xs rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(239,68,68,0.5)]"
+                                style={{ animation: 'scratchPopIn 0.35s ease-out forwards' }}
                             >
-                                <span className="text-sm">💥</span>
+                                <span className="text-sm">⚡</span>
                                 <span className="tracking-wide uppercase font-extrabold">{error}</span>
                             </div>
                         )}
 
-                        {noteAnimState === 'success_dropping' && (
+                        {turntableState === 'success_playing' && (
                             <div
                                 className="w-full py-2 px-3 bg-[#f70776]/15 border border-[#f70776] text-[#FAF6F6] text-xs rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(247,7,118,0.4)] animate-pulse"
                             >
-                                <span className="text-sm text-[#f70776]">🎵</span>
+                                <span className="text-sm text-[#f70776]">🎧</span>
                                 <span className="tracking-wide uppercase font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-[#FAF6F6] to-[#f70776]">
-                                    Music Resonated • Opening Admin Panel...
+                                    Beat Dropped • Opening Admin Studio...
                                 </span>
                             </div>
                         )}
@@ -294,7 +280,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                 className={`w-full px-4 py-3 text-sm rounded-xl bg-[#141010] border text-white placeholder-[#6b6161] focus:outline-none transition-all ${
                                     error
                                         ? 'border-red-500 ring-1 ring-red-500/40 bg-red-950/20'
-                                        : noteAnimState === 'success_dropping'
+                                        : turntableState === 'success_playing'
                                         ? 'border-[#f70776] ring-1 ring-[#f70776]/50 bg-[#f70776]/10'
                                         : 'border-[#2B2323] focus:border-[#f70776] focus:ring-1 focus:ring-[#f70776]'
                                 }`}
@@ -314,7 +300,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                 className={`w-full px-4 py-3 text-sm rounded-xl bg-[#141010] border text-white placeholder-[#6b6161] focus:outline-none transition-all ${
                                     error
                                         ? 'border-red-500 ring-1 ring-red-500/40 bg-red-950/20'
-                                        : noteAnimState === 'success_dropping'
+                                        : turntableState === 'success_playing'
                                         ? 'border-[#f70776] ring-1 ring-[#f70776]/50 bg-[#f70776]/10'
                                         : 'border-[#2B2323] focus:border-[#f70776] focus:ring-1 focus:ring-[#f70776]'
                                 }`}
@@ -323,22 +309,22 @@ const LoginPage = ({ onLoginSuccess }) => {
 
                         <button
                             type="submit"
-                            disabled={isLoading || noteAnimState === 'success_dropping'}
+                            disabled={isLoading || turntableState === 'success_playing'}
                             className={`w-full py-3.5 mt-1 font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all duration-300 transform cursor-pointer flex items-center justify-center gap-2 ${
-                                noteAnimState === 'success_dropping'
+                                turntableState === 'success_playing'
                                     ? 'bg-gradient-to-r from-[#c3195d] via-[#f70776] to-[#ff007f] text-white shadow-[#f70776]/50 scale-[1.02]'
                                     : 'bg-[#f70776] hover:bg-[#c3195d] text-white shadow-[#f70776]/25 hover:-translate-y-0.5 active:translate-y-0'
                             } disabled:opacity-75`}
                         >
-                            {noteAnimState === 'success_dropping' ? (
+                            {turntableState === 'success_playing' ? (
                                 <>
-                                    <span>🎵</span>
-                                    <span>Opening Studio...</span>
+                                    <span>🎧</span>
+                                    <span>Spinning Live • Opening Studio...</span>
                                 </>
                             ) : isLoading ? (
                                 <>
                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    <span>Checking Key...</span>
+                                    <span>Cueing Turntable...</span>
                                 </>
                             ) : (
                                 <span>Access Studio</span>
@@ -347,118 +333,123 @@ const LoginPage = ({ onLoginSuccess }) => {
                     </form>
 
                     {/* ========================================================================= */}
-                    {/* ABSOLUTE OVERLAY: MUSIC NOTE FALLING & SHATTERING (NO LAYOUT SHIFT) */}
+                    {/* ABSOLUTE OVERLAY: VINYL TURNTABLE & NEEDLE ANIMATION (ZERO LAYOUT SHIFT) */}
                     {/* ========================================================================= */}
-                    {noteAnimState !== 'idle' && (
-                        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
+                    {turntableState !== 'idle' && (
+                        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none bg-black/40 backdrop-blur-[2px] transition-all">
                             
-                            {/* 1. SUCCESS: MUSIC SYMBOL DROPS IN BRAND PINK #f70776 & RESONATES */}
-                            {noteAnimState === 'success_dropping' && (
-                                <div className="relative flex items-center justify-center">
-                                    {/* Concentric Sonic Rings in Signature Magenta #f70776 */}
-                                    <div
-                                        className="absolute w-28 h-28 rounded-full border-2 border-[#f70776] shadow-[0_0_30px_#f70776]"
-                                        style={{ animation: 'sonicRingPulsePink 0.9s ease-out forwards', animationDelay: '0.35s' }}
-                                    />
-                                    <div
-                                        className="absolute w-44 h-44 rounded-full border border-[#c3195d] shadow-[0_0_40px_#c3195d]"
-                                        style={{ animation: 'sonicRingPulsePink 1.1s ease-out forwards', animationDelay: '0.5s' }}
-                                    />
-
-                                    {/* Dropping & Bouncing Neon Music Symbol in Website Pink #f70776 */}
-                                    <div
-                                        className="relative filter drop-shadow-[0_0_25px_#f70776]"
-                                        style={{ animation: 'noteDropSuccessPink 0.85s cubic-bezier(0.25, 1, 0.5, 1) forwards' }}
-                                    >
-                                        <svg width="68" height="68" viewBox="0 0 24 24" fill="none">
-                                            <path
-                                                d="M9 18V5L21 3V16M9 18C9 19.6569 7.65685 21 6 21C4.34315 21 3 19.6569 3 18C3 16.3431 4.34315 15 6 15C7.65685 15 9 16.3431 9 18ZM21 16C21 17.6569 19.6569 19 18 19C16.3431 19 15 17.6569 15 16C15 14.3431 16.3431 13 18 13C19.6569 13 21 14.3431 21 16Z"
-                                                stroke="url(#soundscapeBrandGrad)"
-                                                strokeWidth="2.5"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                fill="url(#soundscapeBrandFill)"
-                                            />
-                                            <defs>
-                                                <linearGradient id="soundscapeBrandGrad" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
-                                                    <stop stopColor="#FFFFFF" />
-                                                    <stop offset="0.4" stopColor="#F70776" />
-                                                    <stop offset="1" stopColor="#C3195D" />
-                                                </linearGradient>
-                                                <linearGradient id="soundscapeBrandFill" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
-                                                    <stop stopColor="#F70776" stopOpacity="0.9" />
-                                                    <stop offset="1" stopColor="#C3195D" stopOpacity="0.6" />
-                                                </linearGradient>
-                                            </defs>
-                                        </svg>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* 2. WRONG: MUSIC SYMBOL FALLS RAPIDLY */}
-                            {noteAnimState === 'wrong_crashing' && (
-                                <div
-                                    className="filter drop-shadow-[0_0_20px_#EF4444]"
-                                    style={{ animation: 'noteDropCrashRed 0.42s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards' }}
-                                >
-                                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none">
-                                        <path
-                                            d="M9 18V5L21 3V16M9 18C9 19.6569 7.65685 21 6 21C4.34315 21 3 19.6569 3 18C3 16.3431 4.34315 15 6 15C7.65685 15 9 16.3431 9 18ZM21 16C21 17.6569 19.6569 19 18 19C16.3431 19 15 17.6569 15 16C15 14.3431 16.3431 13 18 13C19.6569 13 21 14.3431 21 16Z"
-                                            stroke="#EF4444"
-                                            strokeWidth="2.5"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            fill="rgba(239, 68, 68, 0.85)"
+                            <div className="relative w-56 h-56 flex items-center justify-center">
+                                
+                                {/* 1. SOUNDWAVE RIPPLES ON SUCCESS IN PINK #f70776 */}
+                                {turntableState === 'success_playing' && (
+                                    <>
+                                        <div
+                                            className="absolute w-36 h-36 rounded-full border-2 border-[#f70776] shadow-[0_0_35px_#f70776]"
+                                            style={{ animation: 'soundwavePulsePink 0.9s ease-out forwards', animationDelay: '0.2s' }}
                                         />
-                                    </svg>
-                                </div>
-                            )}
+                                        <div
+                                            className="absolute w-52 h-52 rounded-full border border-[#c3195d] shadow-[0_0_45px_#c3195d]"
+                                            style={{ animation: 'soundwavePulsePink 1.1s ease-out forwards', animationDelay: '0.4s' }}
+                                        />
+                                    </>
+                                )}
 
-                            {/* 3. WRONG: CRACKED & SHATTERED PIECES FLYING APART */}
-                            {noteAnimState === 'wrong_shattered' && (
-                                <div className="relative flex items-center justify-center">
-                                    {/* Shatter Collision Flash */}
-                                    <div
-                                        className="absolute w-28 h-28 rounded-full bg-red-600/35 blur-md pointer-events-none"
-                                        style={{ animation: 'crackFlashRed 0.45s ease-out forwards' }}
-                                    />
+                                {/* 2. THE VINYL RECORD DISC */}
+                                <div
+                                    className={`relative w-44 h-44 rounded-full bg-[#0d090c] border-4 border-[#241c21] shadow-[0_0_40px_rgba(0,0,0,0.9)] flex items-center justify-center ${
+                                        turntableState === 'success_playing'
+                                            ? 'shadow-[0_0_40px_rgba(247,7,118,0.5)]'
+                                            : turntableState === 'wrong_scratching' || turntableState === 'wrong_stopped'
+                                            ? 'shadow-[0_0_35px_rgba(239,68,68,0.5)] border-red-900/60'
+                                            : ''
+                                    }`}
+                                    style={{
+                                        animation:
+                                            turntableState === 'success_playing'
+                                                ? 'vinylSpin 0.7s linear infinite'
+                                                : turntableState === 'turntable_spinning'
+                                                ? 'vinylSpin 1.2s linear infinite'
+                                                : turntableState === 'wrong_scratching'
+                                                ? 'vinylSkidStop 0.45s ease-out forwards'
+                                                : 'none'
+                                    }}
+                                >
+                                    {/* Vinyl Grooves concentric rings */}
+                                    <div className="absolute inset-2 rounded-full border border-white/5" />
+                                    <div className="absolute inset-5 rounded-full border border-white/10" />
+                                    <div className="absolute inset-8 rounded-full border border-white/5" />
+                                    <div className="absolute inset-11 rounded-full border border-white/10" />
 
-                                    {/* Left Shard flying */}
-                                    <div
-                                        className="absolute"
-                                        style={{ animation: 'shardFlyLeftRed 0.75s ease-out forwards' }}
-                                    >
-                                        <svg width="38" height="46" viewBox="0 0 12 24" fill="none">
-                                            <path
-                                                d="M9 5L3 8L8 14L2 17C2 19 4 21 6 21C8 21 9 19.5 9 18V5Z"
-                                                stroke="#EF4444"
-                                                strokeWidth="2"
-                                                fill="#DC2626"
-                                            />
-                                        </svg>
+                                    {/* Light Sheen Reflection across Vinyl surface */}
+                                    <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
+
+                                    {/* Scratch Scuffs on Error */}
+                                    {(turntableState === 'wrong_scratching' || turntableState === 'wrong_stopped') && (
+                                        <div className="absolute inset-0 rounded-full flex items-center justify-center">
+                                            <div className="w-24 h-0.5 bg-red-500/80 shadow-[0_0_8px_#ef4444] rotate-45 transform" />
+                                            <div className="w-20 h-0.5 bg-red-400/70 shadow-[0_0_8px_#ef4444] -rotate-12 transform" />
+                                        </div>
+                                    )}
+
+                                    {/* Center Vinyl Label (SS Audios Brand Hub in Pink #f70776) */}
+                                    <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#c3195d] to-[#f70776] border-2 border-black shadow-inner flex flex-col items-center justify-center text-center p-1">
+                                        <span className="text-[9px] font-black text-white tracking-widest leading-none drop-shadow">SS</span>
+                                        <span className="text-[7px] font-bold text-white/90 uppercase tracking-tighter">AUDIOS</span>
+                                        {/* Center Spindle Hole */}
+                                        <div className="w-2 h-2 rounded-full bg-[#141010] border border-black mt-0.5" />
                                     </div>
-
-                                    {/* Right Shard flying */}
-                                    <div
-                                        className="absolute"
-                                        style={{ animation: 'shardFlyRightRed 0.75s ease-out forwards' }}
-                                    >
-                                        <svg width="38" height="46" viewBox="0 0 14 24" fill="none">
-                                            <path
-                                                d="M2 3L12 5V16C12 17.5 10.5 19 9 19C7 19 6 17 6 15L10 11L4 7L2 3Z"
-                                                stroke="#EF4444"
-                                                strokeWidth="2"
-                                                fill="#DC2626"
-                                            />
-                                        </svg>
-                                    </div>
-
-                                    {/* Red Energy Spark Shards */}
-                                    <span className="absolute w-2 h-2 rounded-full bg-red-400 -translate-x-7 -translate-y-4 animate-ping" />
-                                    <span className="absolute w-1.5 h-1.5 rounded-full bg-yellow-300 translate-x-8 translate-y-3 animate-ping" />
-                                    <span className="absolute w-2 h-2 rounded-full bg-red-500 translate-x-5 -translate-y-6 animate-ping" />
                                 </div>
-                            )}
+
+                                {/* 3. METALLIC DJ TONEARM & STYLUS NEEDLE */}
+                                <div className="absolute top-2 right-3 w-16 h-28 pointer-events-none">
+                                    <div
+                                        className="relative w-full h-full"
+                                        style={{
+                                            animation:
+                                                turntableState === 'success_playing'
+                                                    ? 'tonearmDropSuccess 0.6s ease-out forwards'
+                                                    : turntableState === 'wrong_scratching' || turntableState === 'wrong_stopped'
+                                                    ? 'tonearmScratchSkid 0.45s ease-out forwards'
+                                                    : 'none',
+                                            transformOrigin: '80% 15%'
+                                        }}
+                                    >
+                                        {/* Tonearm Base Pivot Hub */}
+                                        <div className="absolute top-1 right-1 w-6 h-6 rounded-full bg-gradient-to-b from-gray-300 to-gray-700 border border-gray-900 shadow-md flex items-center justify-center">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-[#f70776]" />
+                                        </div>
+
+                                        {/* Metallic Arm Shaft */}
+                                        <div className="absolute top-5 right-3.5 w-1 h-16 bg-gradient-to-r from-gray-300 via-gray-100 to-gray-400 rounded-full shadow-sm transform -rotate-12" />
+
+                                        {/* Cartridge Head & Stylus Needle Point */}
+                                        <div className="absolute bottom-2 left-3 w-4 h-6 bg-gray-900 border border-gray-700 rounded-sm shadow-md transform rotate-12 flex flex-col items-center justify-end">
+                                            {/* Glowing Stylus Needle Tip */}
+                                            <div
+                                                className={`w-1 h-1.5 rounded-full ${
+                                                    turntableState === 'success_playing'
+                                                        ? 'bg-[#f70776] shadow-[0_0_10px_#f70776]'
+                                                        : turntableState === 'wrong_scratching' || turntableState === 'wrong_stopped'
+                                                        ? 'bg-red-500 shadow-[0_0_10px_#ef4444]'
+                                                        : 'bg-white'
+                                                }`}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 4. RED FRICTION SPARK BURST ON SCRATCH */}
+                                {(turntableState === 'wrong_scratching' || turntableState === 'wrong_stopped') && (
+                                    <div
+                                        className="absolute bottom-14 right-16 w-8 h-8 rounded-full pointer-events-none"
+                                        style={{ animation: 'needleSparkBurst 0.45s ease-out forwards' }}
+                                    >
+                                        <div className="absolute inset-0 bg-red-500/50 rounded-full blur-sm" />
+                                        <span className="absolute w-2 h-2 rounded-full bg-yellow-300 -translate-x-3 -translate-y-2 animate-ping" />
+                                        <span className="absolute w-2 h-2 rounded-full bg-red-500 translate-x-4 -translate-y-3 animate-ping" />
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
