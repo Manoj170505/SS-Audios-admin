@@ -1,52 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SoundscapeBackground from './SoundscapeBackground';
 
 const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || 'ssaudios25@gmail.com').toLowerCase().trim();
 const ADMIN_PASSWORD = (import.meta.env.VITE_ADMIN_PASSWORD || 'ssaudios.admin1').trim();
+
+const BAR_COUNT = 28;
 
 const LoginPage = ({ onLoginSuccess }) => {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    // Animation States: 'idle' | 'turntable_spinning' | 'success_playing' | 'wrong_scratching' | 'wrong_stopped'
-    const [turntableState, setTurntableState] = useState('idle');
+    // Spectrum States: 'idle' | 'peaking_green' | 'dropped_red'
+    const [spectrumState, setSpectrumState] = useState('idle');
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-        if (error || turntableState !== 'idle') {
+        if (error || spectrumState !== 'idle') {
             setError('');
-            setTurntableState('idle');
+            setSpectrumState('idle');
         }
     };
 
     const handleInvalidCredentials = (msg) => {
         setIsLoading(false);
-        setTurntableState('wrong_scratching');
+        setSpectrumState('dropped_red');
+        setError(msg || 'Invalid Credentials');
 
-        // Needle scratches violently and stops
+        // Restore to standby medium frequency after 2.8s
         setTimeout(() => {
-            setTurntableState('wrong_stopped');
-            setError(msg || 'Wrong Credentials');
-        }, 450);
-
-        // Reset state after 2.6s
-        setTimeout(() => {
-            setTurntableState('idle');
-        }, 3000);
+            setSpectrumState('idle');
+        }, 2800);
     };
 
     const handleSuccessCredentials = () => {
         setIsLoading(false);
-        setTurntableState('success_playing');
+        setSpectrumState('peaking_green');
         setError('');
 
-        // Needle drops cleanly, vinyl spins with brand pink soundwaves and opens studio
+        // Peaks in neon green and opens admin portal smoothly
         setTimeout(() => {
             if (onLoginSuccess) {
                 onLoginSuccess(formData);
             }
-        }, 1150);
+        }, 1100);
     };
 
     const handleSubmit = (e) => {
@@ -55,124 +52,59 @@ const LoginPage = ({ onLoginSuccess }) => {
         const inputPassword = (formData.password || '').trim();
 
         if (!inputEmail || !inputPassword) {
-            handleInvalidCredentials('Wrong Credentials: Fill all fields');
+            handleInvalidCredentials('Invalid Credentials: Enter Email & Password');
             return;
         }
 
         setIsLoading(true);
-        setTurntableState('turntable_spinning');
 
         setTimeout(() => {
             if (inputEmail === ADMIN_EMAIL && inputPassword === ADMIN_PASSWORD) {
                 handleSuccessCredentials();
             } else {
-                handleInvalidCredentials('Wrong Credentials');
+                handleInvalidCredentials('Invalid Credentials');
             }
         }, 350);
     };
 
     return (
         <div className="relative min-h-screen bg-[#141010] flex items-center justify-center p-4 sm:p-6 font-sans overflow-hidden">
-            {/* Custom Vinyl Turntable & Needle Scratch Keyframes */}
+            {/* Custom Equalizer Spectrum Bar Keyframe Animations */}
             <style>{`
-                /* CONTINUOUS VINYL SPIN */
-                @keyframes vinylSpin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
+                /* IDLE MEDIUM FREQUENCY OSCILLATION */
+                @keyframes mediumBarPulse {
+                    0%, 100% { height: 18%; opacity: 0.75; }
+                    30% { height: 58%; opacity: 1; }
+                    60% { height: 35%; opacity: 0.85; }
+                    80% { height: 68%; opacity: 1; }
                 }
 
-                /* FAST VINYL SPIN ON SUCCESS */
-                @keyframes vinylSpinFast {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(720deg); }
+                /* SUCCESS MAX PEAK IN GREEN */
+                @keyframes peakGreenSurge {
+                    0% { height: 30%; opacity: 0.8; }
+                    40% { height: 98%; opacity: 1; }
+                    70% { height: 85%; opacity: 1; }
+                    100% { height: 100%; opacity: 1; filter: drop-shadow(0 0 12px #00ffaa); }
                 }
 
-                /* VINYL ABRUPT SKID STOP */
-                @keyframes vinylSkidStop {
-                    0% { transform: rotate(0deg); }
-                    60% { transform: rotate(180deg); }
-                    85% { transform: rotate(240deg) skewX(-2deg); }
-                    100% { transform: rotate(250deg); }
+                /* WRONG CREDENTIALS LOW DROP / FLATLINE IN RED */
+                @keyframes lowRedDrop {
+                    0% { height: 50%; opacity: 0.8; }
+                    35% { height: 8%; opacity: 0.5; }
+                    60% { height: 14%; opacity: 0.7; }
+                    100% { height: 8%; opacity: 0.6; filter: drop-shadow(0 0 6px #ef4444); }
                 }
 
-                /* TONEARM NEEDLE DROP ON SUCCESS */
-                @keyframes tonearmDropSuccess {
-                    0% {
-                        transform: rotate(-35deg);
-                        transform-origin: 85% 15%;
-                    }
-                    60% {
-                        transform: rotate(0deg);
-                        transform-origin: 85% 15%;
-                    }
-                    80% {
-                        transform: rotate(-3deg);
-                        transform-origin: 85% 15%;
-                    }
-                    100% {
-                        transform: rotate(0deg);
-                        transform-origin: 85% 15%;
-                    }
+                @keyframes greenHaloExpand {
+                    0% { transform: scale(0.8); opacity: 0; }
+                    50% { transform: scale(1.1); opacity: 0.8; }
+                    100% { transform: scale(1.3); opacity: 0; }
                 }
 
-                /* TONEARM SCRATCH SKID ON ERROR */
-                @keyframes tonearmScratchSkid {
-                    0% {
-                        transform: rotate(-25deg);
-                        transform-origin: 85% 15%;
-                    }
-                    35% {
-                        transform: rotate(5deg);
-                        transform-origin: 85% 15%;
-                    }
-                    60% {
-                        transform: rotate(-18deg);
-                        transform-origin: 85% 15%;
-                    }
-                    100% {
-                        transform: rotate(8deg);
-                        transform-origin: 85% 15%;
-                    }
-                }
-
-                /* DJ BEAT SOUNDWAVE EXPANSION IN PINK #f70776 */
-                @keyframes soundwavePulsePink {
-                    0% {
-                        transform: scale(0.6);
-                        opacity: 0.9;
-                    }
-                    100% {
-                        transform: scale(2.6);
-                        opacity: 0;
-                    }
-                }
-
-                /* NEEDLE SCRATCH SPARKS */
-                @keyframes needleSparkBurst {
-                    0% {
-                        transform: scale(0.3) rotate(0deg);
-                        opacity: 1;
-                    }
-                    100% {
-                        transform: scale(2.2) rotate(45deg);
-                        opacity: 0;
-                    }
-                }
-
-                /* SCRATCH CUT GLITCH POP */
-                @keyframes scratchPopIn {
-                    0% {
-                        transform: scale(0.8);
-                        opacity: 0;
-                    }
-                    50% {
-                        transform: scale(1.06);
-                        opacity: 1;
-                    }
-                    100% {
-                        transform: scale(1);
-                        opacity: 1;
-                    }
+                @keyframes redGlitchJitter {
+                    0%, 100% { transform: translateX(0); }
+                    25% { transform: translateX(-4px); }
+                    75% { transform: translateX(4px); }
                 }
             `}</style>
 
@@ -185,8 +117,8 @@ const LoginPage = ({ onLoginSuccess }) => {
             <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#141010] via-transparent to-[#141010]/80 pointer-events-none" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#f70776]/10 rounded-full blur-[140px] pointer-events-none" />
 
-            {/* Main Login Card - Stably Proportioned */}
-            <div className="relative z-10 bg-[#1C1717]/95 backdrop-blur-xl border border-[#2B2323] hover:border-[#f70776]/40 transition-colors duration-500 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col md:flex-row w-full max-w-4xl min-h-[560px] md:h-[580px]">
+            {/* Main Login Card - Clean & Stable Proportions */}
+            <div className="relative z-10 bg-[#1C1717]/95 backdrop-blur-xl border border-[#2B2323] hover:border-[#f70776]/40 transition-colors duration-500 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col md:flex-row w-full max-w-4xl min-h-[580px] md:h-[600px]">
 
                 {/* Left Side: Visual / Hero Section */}
                 <div className="relative md:w-1/2 min-h-[220px] md:min-h-full flex flex-col justify-between p-6 sm:p-8 overflow-hidden shrink-0">
@@ -215,12 +147,12 @@ const LoginPage = ({ onLoginSuccess }) => {
                     </div>
                 </div>
 
-                {/* Right Side: Form Container with Fixed Proportions */}
-                <div className="relative md:w-1/2 bg-[#1C1717]/95 p-8 sm:p-10 flex flex-col justify-between shrink-0 overflow-hidden border-t md:border-t-0 md:border-l border-[#2B2323]">
+                {/* Right Side: Form Container */}
+                <div className="relative md:w-1/2 bg-[#1C1717]/95 p-7 sm:p-9 flex flex-col justify-between shrink-0 overflow-hidden border-t md:border-t-0 md:border-l border-[#2B2323]">
                     
-                    {/* Top Header */}
+                    {/* 1. Header Section */}
                     <div>
-                        <div className="flex justify-between items-center mb-6">
+                        <div className="flex justify-between items-center mb-5">
                             <div className="flex items-center space-x-2">
                                 <div className="w-7 h-7 rounded-full bg-[#f70776] flex items-center justify-between px-1.5 py-2">
                                     <span className="w-1 h-1 bg-[#141010] rounded-full"></span>
@@ -236,39 +168,115 @@ const LoginPage = ({ onLoginSuccess }) => {
                         </div>
 
                         <div>
-                            <h2 className="text-2xl font-extrabold text-white mb-1">Welcome Back</h2>
-                            <p className="text-[#A69B9B] text-xs font-light">Drop the needle to unlock Soundscape Studio</p>
+                            <h2 className="text-2xl font-extrabold text-white mb-0.5">Welcome Back</h2>
+                            <p className="text-[#A69B9B] text-xs font-light">Enter credentials to synchronize audio studio</p>
                         </div>
                     </div>
 
-                    {/* Dedicated Notification Slot (Zero Shift / Zero Resize) */}
-                    <div className="h-10 my-2 flex items-center justify-center shrink-0">
-                        {error && (
-                            <div
-                                className="w-full py-2 px-3 bg-red-950/85 border border-red-500 text-red-300 text-xs rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(239,68,68,0.5)]"
-                                style={{ animation: 'scratchPopIn 0.35s ease-out forwards' }}
-                            >
-                                <span className="text-sm">⚡</span>
-                                <span className="tracking-wide uppercase font-extrabold">{error}</span>
-                            </div>
-                        )}
-
-                        {turntableState === 'success_playing' && (
-                            <div
-                                className="w-full py-2 px-3 bg-[#f70776]/15 border border-[#f70776] text-[#FAF6F6] text-xs rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(247,7,118,0.4)] animate-pulse"
-                            >
-                                <span className="text-sm text-[#f70776]">🎧</span>
-                                <span className="tracking-wide uppercase font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-[#FAF6F6] to-[#f70776]">
-                                    Beat Dropped • Opening Admin Studio...
+                    {/* ========================================================================= */}
+                    {/* 2. SOUND WAVE BAR IN THE GAP BETWEEN WELCOME MESSAGE & LOGIN FORM */}
+                    {/* ========================================================================= */}
+                    <div
+                        className={`my-3 p-3 rounded-2xl border transition-all duration-500 relative overflow-hidden ${
+                            spectrumState === 'peaking_green'
+                                ? 'bg-emerald-950/40 border-emerald-400 shadow-[0_0_30px_rgba(0,255,170,0.35)]'
+                                : spectrumState === 'dropped_red'
+                                ? 'bg-red-950/40 border-red-500 shadow-[0_0_25px_rgba(239,68,68,0.35)] animate-[redGlitchJitter_0.35s_ease-in-out]'
+                                : 'bg-[#141010]/90 border-[#2B2323]'
+                        }`}
+                    >
+                        {/* Audio Spectrum Status Header */}
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <span
+                                    className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                                        spectrumState === 'peaking_green'
+                                            ? 'bg-[#00ffaa] shadow-[0_0_8px_#00ffaa] animate-ping'
+                                            : spectrumState === 'dropped_red'
+                                            ? 'bg-red-500 shadow-[0_0_8px_#ef4444]'
+                                            : 'bg-[#f70776] animate-pulse'
+                                    }`}
+                                />
+                                <span
+                                    className={`text-[10px] font-mono font-bold tracking-wider uppercase transition-colors duration-300 ${
+                                        spectrumState === 'peaking_green'
+                                            ? 'text-[#00ffaa]'
+                                            : spectrumState === 'dropped_red'
+                                            ? 'text-red-400'
+                                            : 'text-[#BDB2B2]'
+                                    }`}
+                                >
+                                    {spectrumState === 'peaking_green'
+                                        ? '⚡ MAX PEAK RESONANCE • ACCESS GRANTED'
+                                        : spectrumState === 'dropped_red'
+                                        ? '⚠️ SIGNAL FLATLINED • INVALID CREDENTIAL'
+                                        : 'LIVE AUDIO SPECTRUM // 48 kHz'}
                                 </span>
                             </div>
-                        )}
+
+                            <span
+                                className={`text-[10px] font-mono font-bold ${
+                                    spectrumState === 'peaking_green'
+                                        ? 'text-[#00ffaa]'
+                                        : spectrumState === 'dropped_red'
+                                        ? 'text-red-400'
+                                        : 'text-[#A69B9B]'
+                                }`}
+                            >
+                                {spectrumState === 'peaking_green'
+                                    ? '+6.0 dB [PEAK]'
+                                    : spectrumState === 'dropped_red'
+                                    ? '-inf dB [LOW]'
+                                    : '-12 dB [MED]'}
+                            </span>
+                        </div>
+
+                        {/* Animated Equalizer Frequency Wave Bars */}
+                        <div className="h-10 flex items-end justify-between gap-[3px] px-1 overflow-hidden">
+                            {Array.from({ length: BAR_COUNT }).map((_, idx) => {
+                                // Calculate wave rhythm offset for harmonic shape
+                                const waveOffset = Math.sin((idx / (BAR_COUNT - 1)) * Math.PI);
+                                const animDelay = (idx * 0.04).toFixed(2);
+                                const animDuration = (0.7 + (idx % 4) * 0.15).toFixed(2);
+
+                                return (
+                                    <div
+                                        key={idx}
+                                        className={`w-full rounded-t-sm transition-all duration-300 ${
+                                            spectrumState === 'peaking_green'
+                                                ? 'bg-gradient-to-t from-[#059669] via-[#10b981] to-[#00ffaa] shadow-[0_0_8px_#00ffaa]'
+                                                : spectrumState === 'dropped_red'
+                                                ? 'bg-gradient-to-t from-red-950 via-red-800 to-red-500'
+                                                : 'bg-gradient-to-t from-[#c3195d] via-[#f70776] to-[#FAF6F6]'
+                                        }`}
+                                        style={{
+                                            animation:
+                                                spectrumState === 'peaking_green'
+                                                    ? `peakGreenSurge 0.5s ease-out infinite alternate`
+                                                    : spectrumState === 'dropped_red'
+                                                    ? `lowRedDrop 0.4s ease-in forwards`
+                                                    : `mediumBarPulse ${animDuration}s ease-in-out infinite`,
+                                            animationDelay:
+                                                spectrumState === 'peaking_green'
+                                                    ? `${(idx * 0.02).toFixed(2)}s`
+                                                    : `${animDelay}s`,
+                                            height:
+                                                spectrumState === 'peaking_green'
+                                                    ? `${Math.min(100, 75 + waveOffset * 25)}%`
+                                                    : spectrumState === 'dropped_red'
+                                                    ? `${Math.max(6, 12 - waveOffset * 6)}%`
+                                                    : `${20 + waveOffset * 40}%`
+                                        }}
+                                    />
+                                );
+                            })}
+                        </div>
                     </div>
 
-                    {/* Form Controls */}
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* 3. Form Section */}
+                    <form onSubmit={handleSubmit} className="space-y-3.5">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-[#A69B9B] mb-1.5">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-[#A69B9B] mb-1">
                                 Email Address
                             </label>
                             <input
@@ -277,18 +285,18 @@ const LoginPage = ({ onLoginSuccess }) => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 placeholder="admin@soundscape.io"
-                                className={`w-full px-4 py-3 text-sm rounded-xl bg-[#141010] border text-white placeholder-[#6b6161] focus:outline-none transition-all ${
-                                    error
+                                className={`w-full px-3.5 py-2.5 text-sm rounded-xl bg-[#141010] border text-white placeholder-[#6b6161] focus:outline-none transition-all ${
+                                    spectrumState === 'dropped_red'
                                         ? 'border-red-500 ring-1 ring-red-500/40 bg-red-950/20'
-                                        : turntableState === 'success_playing'
-                                        ? 'border-[#f70776] ring-1 ring-[#f70776]/50 bg-[#f70776]/10'
+                                        : spectrumState === 'peaking_green'
+                                        ? 'border-emerald-400 ring-1 ring-emerald-400/50 bg-emerald-950/20'
                                         : 'border-[#2B2323] focus:border-[#f70776] focus:ring-1 focus:ring-[#f70776]'
                                 }`}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-[#A69B9B] mb-1.5">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-[#A69B9B] mb-1">
                                 Password
                             </label>
                             <input
@@ -297,11 +305,11 @@ const LoginPage = ({ onLoginSuccess }) => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 placeholder="••••••••"
-                                className={`w-full px-4 py-3 text-sm rounded-xl bg-[#141010] border text-white placeholder-[#6b6161] focus:outline-none transition-all ${
-                                    error
+                                className={`w-full px-3.5 py-2.5 text-sm rounded-xl bg-[#141010] border text-white placeholder-[#6b6161] focus:outline-none transition-all ${
+                                    spectrumState === 'dropped_red'
                                         ? 'border-red-500 ring-1 ring-red-500/40 bg-red-950/20'
-                                        : turntableState === 'success_playing'
-                                        ? 'border-[#f70776] ring-1 ring-[#f70776]/50 bg-[#f70776]/10'
+                                        : spectrumState === 'peaking_green'
+                                        ? 'border-emerald-400 ring-1 ring-emerald-400/50 bg-emerald-950/20'
                                         : 'border-[#2B2323] focus:border-[#f70776] focus:ring-1 focus:ring-[#f70776]'
                                 }`}
                             />
@@ -309,149 +317,30 @@ const LoginPage = ({ onLoginSuccess }) => {
 
                         <button
                             type="submit"
-                            disabled={isLoading || turntableState === 'success_playing'}
-                            className={`w-full py-3.5 mt-1 font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all duration-300 transform cursor-pointer flex items-center justify-center gap-2 ${
-                                turntableState === 'success_playing'
-                                    ? 'bg-gradient-to-r from-[#c3195d] via-[#f70776] to-[#ff007f] text-white shadow-[#f70776]/50 scale-[1.02]'
+                            disabled={isLoading || spectrumState === 'peaking_green'}
+                            className={`w-full py-3 mt-1 font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all duration-300 transform cursor-pointer flex items-center justify-center gap-2 ${
+                                spectrumState === 'peaking_green'
+                                    ? 'bg-gradient-to-r from-emerald-500 to-[#00ffaa] text-black shadow-emerald-500/50 scale-[1.02]'
+                                    : spectrumState === 'dropped_red'
+                                    ? 'bg-red-600 text-white shadow-red-600/40'
                                     : 'bg-[#f70776] hover:bg-[#c3195d] text-white shadow-[#f70776]/25 hover:-translate-y-0.5 active:translate-y-0'
                             } disabled:opacity-75`}
                         >
-                            {turntableState === 'success_playing' ? (
+                            {spectrumState === 'peaking_green' ? (
                                 <>
-                                    <span>🎧</span>
-                                    <span>Spinning Live • Opening Studio...</span>
+                                    <span>⚡</span>
+                                    <span>Resonance Locked • Opening Studio...</span>
                                 </>
                             ) : isLoading ? (
                                 <>
                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    <span>Cueing Turntable...</span>
+                                    <span>Scanning Frequency...</span>
                                 </>
                             ) : (
                                 <span>Access Studio</span>
                             )}
                         </button>
                     </form>
-
-                    {/* ========================================================================= */}
-                    {/* ABSOLUTE OVERLAY: VINYL TURNTABLE & NEEDLE ANIMATION (ZERO LAYOUT SHIFT) */}
-                    {/* ========================================================================= */}
-                    {turntableState !== 'idle' && (
-                        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none bg-black/40 backdrop-blur-[2px] transition-all">
-                            
-                            <div className="relative w-56 h-56 flex items-center justify-center">
-                                
-                                {/* 1. SOUNDWAVE RIPPLES ON SUCCESS IN PINK #f70776 */}
-                                {turntableState === 'success_playing' && (
-                                    <>
-                                        <div
-                                            className="absolute w-36 h-36 rounded-full border-2 border-[#f70776] shadow-[0_0_35px_#f70776]"
-                                            style={{ animation: 'soundwavePulsePink 0.9s ease-out forwards', animationDelay: '0.2s' }}
-                                        />
-                                        <div
-                                            className="absolute w-52 h-52 rounded-full border border-[#c3195d] shadow-[0_0_45px_#c3195d]"
-                                            style={{ animation: 'soundwavePulsePink 1.1s ease-out forwards', animationDelay: '0.4s' }}
-                                        />
-                                    </>
-                                )}
-
-                                {/* 2. THE VINYL RECORD DISC */}
-                                <div
-                                    className={`relative w-44 h-44 rounded-full bg-[#0d090c] border-4 border-[#241c21] shadow-[0_0_40px_rgba(0,0,0,0.9)] flex items-center justify-center ${
-                                        turntableState === 'success_playing'
-                                            ? 'shadow-[0_0_40px_rgba(247,7,118,0.5)]'
-                                            : turntableState === 'wrong_scratching' || turntableState === 'wrong_stopped'
-                                            ? 'shadow-[0_0_35px_rgba(239,68,68,0.5)] border-red-900/60'
-                                            : ''
-                                    }`}
-                                    style={{
-                                        animation:
-                                            turntableState === 'success_playing'
-                                                ? 'vinylSpin 0.7s linear infinite'
-                                                : turntableState === 'turntable_spinning'
-                                                ? 'vinylSpin 1.2s linear infinite'
-                                                : turntableState === 'wrong_scratching'
-                                                ? 'vinylSkidStop 0.45s ease-out forwards'
-                                                : 'none'
-                                    }}
-                                >
-                                    {/* Vinyl Grooves concentric rings */}
-                                    <div className="absolute inset-2 rounded-full border border-white/5" />
-                                    <div className="absolute inset-5 rounded-full border border-white/10" />
-                                    <div className="absolute inset-8 rounded-full border border-white/5" />
-                                    <div className="absolute inset-11 rounded-full border border-white/10" />
-
-                                    {/* Light Sheen Reflection across Vinyl surface */}
-                                    <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
-
-                                    {/* Scratch Scuffs on Error */}
-                                    {(turntableState === 'wrong_scratching' || turntableState === 'wrong_stopped') && (
-                                        <div className="absolute inset-0 rounded-full flex items-center justify-center">
-                                            <div className="w-24 h-0.5 bg-red-500/80 shadow-[0_0_8px_#ef4444] rotate-45 transform" />
-                                            <div className="w-20 h-0.5 bg-red-400/70 shadow-[0_0_8px_#ef4444] -rotate-12 transform" />
-                                        </div>
-                                    )}
-
-                                    {/* Center Vinyl Label (SS Audios Brand Hub in Pink #f70776) */}
-                                    <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#c3195d] to-[#f70776] border-2 border-black shadow-inner flex flex-col items-center justify-center text-center p-1">
-                                        <span className="text-[9px] font-black text-white tracking-widest leading-none drop-shadow">SS</span>
-                                        <span className="text-[7px] font-bold text-white/90 uppercase tracking-tighter">AUDIOS</span>
-                                        {/* Center Spindle Hole */}
-                                        <div className="w-2 h-2 rounded-full bg-[#141010] border border-black mt-0.5" />
-                                    </div>
-                                </div>
-
-                                {/* 3. METALLIC DJ TONEARM & STYLUS NEEDLE */}
-                                <div className="absolute top-2 right-3 w-16 h-28 pointer-events-none">
-                                    <div
-                                        className="relative w-full h-full"
-                                        style={{
-                                            animation:
-                                                turntableState === 'success_playing'
-                                                    ? 'tonearmDropSuccess 0.6s ease-out forwards'
-                                                    : turntableState === 'wrong_scratching' || turntableState === 'wrong_stopped'
-                                                    ? 'tonearmScratchSkid 0.45s ease-out forwards'
-                                                    : 'none',
-                                            transformOrigin: '80% 15%'
-                                        }}
-                                    >
-                                        {/* Tonearm Base Pivot Hub */}
-                                        <div className="absolute top-1 right-1 w-6 h-6 rounded-full bg-gradient-to-b from-gray-300 to-gray-700 border border-gray-900 shadow-md flex items-center justify-center">
-                                            <div className="w-2.5 h-2.5 rounded-full bg-[#f70776]" />
-                                        </div>
-
-                                        {/* Metallic Arm Shaft */}
-                                        <div className="absolute top-5 right-3.5 w-1 h-16 bg-gradient-to-r from-gray-300 via-gray-100 to-gray-400 rounded-full shadow-sm transform -rotate-12" />
-
-                                        {/* Cartridge Head & Stylus Needle Point */}
-                                        <div className="absolute bottom-2 left-3 w-4 h-6 bg-gray-900 border border-gray-700 rounded-sm shadow-md transform rotate-12 flex flex-col items-center justify-end">
-                                            {/* Glowing Stylus Needle Tip */}
-                                            <div
-                                                className={`w-1 h-1.5 rounded-full ${
-                                                    turntableState === 'success_playing'
-                                                        ? 'bg-[#f70776] shadow-[0_0_10px_#f70776]'
-                                                        : turntableState === 'wrong_scratching' || turntableState === 'wrong_stopped'
-                                                        ? 'bg-red-500 shadow-[0_0_10px_#ef4444]'
-                                                        : 'bg-white'
-                                                }`}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* 4. RED FRICTION SPARK BURST ON SCRATCH */}
-                                {(turntableState === 'wrong_scratching' || turntableState === 'wrong_stopped') && (
-                                    <div
-                                        className="absolute bottom-14 right-16 w-8 h-8 rounded-full pointer-events-none"
-                                        style={{ animation: 'needleSparkBurst 0.45s ease-out forwards' }}
-                                    >
-                                        <div className="absolute inset-0 bg-red-500/50 rounded-full blur-sm" />
-                                        <span className="absolute w-2 h-2 rounded-full bg-yellow-300 -translate-x-3 -translate-y-2 animate-ping" />
-                                        <span className="absolute w-2 h-2 rounded-full bg-red-500 translate-x-4 -translate-y-3 animate-ping" />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
