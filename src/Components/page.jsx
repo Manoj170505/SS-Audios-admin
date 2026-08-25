@@ -2131,7 +2131,7 @@ const MediaManager = ({ onLogout }) => {
                                                         <h4 className="text-lg font-black text-white">{inq.fullName}</h4>
                                                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                                                             <span className="text-[10px] font-bold uppercase tracking-wider bg-[#f70776]/20 text-[#f70776] border border-[#f70776]/30 px-2.5 py-0.5 rounded-full">
-                                                                {inq.eventType || 'Event'}
+                                                                {inq.corporateName || inq.eventType || 'Corporate Lead'}
                                                             </span>
                                                             <span className="text-[11px] text-gray-400">
                                                                 {inq.createdAt ? new Date(inq.createdAt).toLocaleString() : 'Recent'}
@@ -2191,7 +2191,7 @@ const MediaManager = ({ onLogout }) => {
                                             <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#2B2323]">
                                                 {inq.phone && (
                                                     <a
-                                                        href={`https://wa.me/${inq.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${inq.fullName}, thank you for contacting Soundscape! We received your booking request for ${inq.eventType}.`)}`}
+                                                        href={`https://wa.me/${inq.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${inq.fullName}, thank you for contacting Soundscape! We received your booking request for ${inq.corporateName || inq.eventType || 'your event'}.`)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="px-3 py-1.5 bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/40 text-[#25D366] rounded-xl text-xs font-bold transition-all flex items-center gap-1"
@@ -2200,7 +2200,7 @@ const MediaManager = ({ onLogout }) => {
                                                     </a>
                                                 )}
                                                 <a
-                                                    href={`mailto:${inq.email}?subject=${encodeURIComponent(`Soundscape Booking: ${inq.eventType}`)}`}
+                                                    href={`mailto:${inq.email}?subject=${encodeURIComponent(`Soundscape Booking: ${inq.corporateName || inq.eventType || 'Inquiry'}`)}`}
                                                     className="px-4 py-1.5 bg-[#f70776] hover:bg-[#c3195d] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1"
                                                 >
                                                     <span>Reply via Email</span>
