@@ -46,6 +46,10 @@ const MediaManager = ({ onLogout }) => {
         period: '/ event',
         buttonText: 'Choose Plan',
         theme: 'standard',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-party-41338-large.mp4',
+        videos: [
+            'https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-party-41338-large.mp4'
+        ],
         desc: 'Custom live DJ and concert sound production package tailored to your venue.',
         features: [
             { text: "Live DJ Performance (4h)", included: true },
@@ -118,10 +122,45 @@ const MediaManager = ({ onLogout }) => {
         }
     };
 
+    // Booking Inquiries State
+    const [inquiries, setInquiries] = useState([]);
+    const [isLoadingInquiries, setIsLoadingInquiries] = useState(false);
+
+    // Fetch inquiries from backend
+    const fetchInquiries = async () => {
+        setIsLoadingInquiries(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/inquiries`);
+            const data = await res.json();
+            if (data.success && Array.isArray(data.data)) {
+                setInquiries(data.data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch inquiries:', err);
+        } finally {
+            setIsLoadingInquiries(false);
+        }
+    };
+
+    const handleDeleteInquiry = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this booking inquiry?')) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/inquiries/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                setInquiries(prev => prev.filter(inq => inq.id !== id));
+                showNotification('Inquiry deleted successfully');
+            }
+        } catch (err) {
+            showNotification('Failed to delete inquiry', 'error');
+        }
+    };
+
     useEffect(() => {
         fetchMedia();
         fetchServices();
         fetchPlans();
+        fetchInquiries();
     }, []);
 
     // Handle Local File Selection
@@ -376,6 +415,10 @@ const MediaManager = ({ onLogout }) => {
                     period: '/ event',
                     buttonText: 'Choose Plan',
                     theme: 'standard',
+                    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-party-41338-large.mp4',
+                    videos: [
+                        'https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-party-41338-large.mp4'
+                    ],
                     desc: 'Custom live DJ and concert sound production package tailored to your venue.',
                     features: [
                         { text: "Live DJ Performance (4h)", included: true },
@@ -543,6 +586,20 @@ const MediaManager = ({ onLogout }) => {
                                     }`}
                             >
                                 Pricing Plans ({plans.length})
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('inquiries')}
+                                className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${activeTab === 'inquiries'
+                                    ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/30'
+                                    : 'text-gray-400 hover:text-white'
+                                    }`}
+                            >
+                                <span>📥 Inquiries</span>
+                                {inquiries.length > 0 && (
+                                    <span className="bg-[#f70776]/40 text-white text-[10px] px-2 py-0.5 rounded-full font-black">
+                                        {inquiries.length}
+                                    </span>
+                                )}
                             </button>
                         </div>
 
@@ -1247,6 +1304,35 @@ const MediaManager = ({ onLogout }) => {
                                             </span>
                                         </div>
 
+                                        {/* Multi-Video Preview Frame */}
+                                        {((plan.videos && plan.videos.length > 0) || plan.videoUrl) && (
+                                            <div className="relative rounded-2xl overflow-hidden bg-black/80 border border-white/10 p-2 space-y-2 group">
+                                                <div className="flex items-center justify-between px-1 text-[10px] font-bold text-gray-300">
+                                                    <span className="text-[#f70776] flex items-center gap-1">
+                                                        <span>🎬</span> {plan.videos?.length || 1} Stage Videos
+                                                    </span>
+                                                    <span className="text-gray-400">Autoplaying Left-to-Right</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                                                    {(plan.videos && plan.videos.length > 0 ? plan.videos : [plan.videoUrl]).map((vSrc, vidIdx) => (
+                                                        <div key={vidIdx} className="relative w-24 h-16 rounded-lg overflow-hidden shrink-0 border border-white/10 bg-black">
+                                                            <video
+                                                                src={vSrc}
+                                                                className="w-full h-full object-cover"
+                                                                muted
+                                                                loop
+                                                                playsInline
+                                                                autoPlay
+                                                            />
+                                                            <span className="absolute bottom-0.5 right-1 text-[8px] bg-black/80 text-white px-1 rounded">
+                                                                #{vidIdx + 1}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
                                         <div>
                                             <h3 className="text-2xl font-black uppercase text-white tracking-tight">
                                                 {plan.name}
@@ -1289,7 +1375,7 @@ const MediaManager = ({ onLogout }) => {
                                             onClick={() => setEditingPlan(JSON.parse(JSON.stringify(plan)))}
                                             className="flex-1 py-2.5 bg-[#f70776] hover:bg-[#c3195d] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer text-center"
                                         >
-                                            Edit Plan
+                                            Edit Plan & Video
                                         </button>
                                         <button
                                             onClick={() => handleDeletePlan(plan)}
@@ -1306,7 +1392,7 @@ const MediaManager = ({ onLogout }) => {
                         {/* CREATE PRICING PLAN MODAL */}
                         {isAddingPlan && (
                             <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-                                <div className="bg-[#1C1717] border border-[#f70776]/40 rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl space-y-5 my-8">
+                                <div className="bg-[#1C1717] border border-[#f70776]/40 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-5 my-8">
                                     <div className="flex items-center justify-between border-b border-[#2B2323] pb-3">
                                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                             <span>✨</span> Add New Pricing Plan
@@ -1380,6 +1466,123 @@ const MediaManager = ({ onLogout }) => {
                                                     <option value="gold">Gold VIP</option>
                                                 </select>
                                             </div>
+                                        </div>
+
+                                        {/* MULTI-VIDEO MANAGEMENT SECTION */}
+                                        <div className="p-4 bg-black/40 border border-[#f70776]/30 rounded-2xl space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <label className="block text-xs font-bold text-white flex items-center gap-1.5">
+                                                    <span>🎬</span> Card Videos (4 to 5 Continuous Autoplay Feeds)
+                                                </label>
+                                                <span className="text-[10px] text-[#f70776] font-semibold">
+                                                    {(newPlan.videos || []).length} Videos Configured
+                                                </span>
+                                            </div>
+
+                                            {/* List of Video URLs */}
+                                            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                                {(newPlan.videos && newPlan.videos.length > 0 ? newPlan.videos : ['']).map((vUrl, vIdx) => (
+                                                    <div key={vIdx} className="flex items-center gap-2">
+                                                        <span className="text-[10px] font-bold text-gray-400 w-4">#{vIdx + 1}</span>
+                                                        <input
+                                                            type="url"
+                                                            value={vUrl}
+                                                            onChange={e => {
+                                                                const updated = [...(newPlan.videos || [])];
+                                                                updated[vIdx] = e.target.value;
+                                                                setNewPlan({
+                                                                    ...newPlan,
+                                                                    videos: updated,
+                                                                    videoUrl: updated[0] || ''
+                                                                });
+                                                            }}
+                                                            placeholder={`Video URL #${vIdx + 1} (e.g. https://assets.mixkit.co/...mp4)`}
+                                                            className="flex-1 px-3 py-1.5 bg-black/60 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-[#f70776]"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const updated = (newPlan.videos || []).filter((_, idx) => idx !== vIdx);
+                                                                setNewPlan({
+                                                                    ...newPlan,
+                                                                    videos: updated,
+                                                                    videoUrl: updated[0] || ''
+                                                                });
+                                                            }}
+                                                            className="px-2 py-1 bg-red-900/30 hover:bg-red-800/60 text-red-300 rounded-lg text-xs cursor-pointer"
+                                                            title="Remove this video"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const current = newPlan.videos || [];
+                                                        setNewPlan({
+                                                            ...newPlan,
+                                                            videos: [...current, '']
+                                                        });
+                                                    }}
+                                                    className="px-3 py-1.5 bg-[#2B2323] hover:bg-[#f70776]/30 text-white rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                                                >
+                                                    <span>+</span> Add Another Video URL
+                                                </button>
+
+                                                {/* Pick from Vault/Gallery Videos */}
+                                                {mediaList.filter(m => m.type === 'video').length > 0 && (
+                                                    <select
+                                                        onChange={e => {
+                                                            if (e.target.value) {
+                                                                const current = newPlan.videos || [];
+                                                                const updated = [...current, e.target.value];
+                                                                setNewPlan({
+                                                                    ...newPlan,
+                                                                    videos: updated,
+                                                                    videoUrl: updated[0] || ''
+                                                                });
+                                                                e.target.value = '';
+                                                            }
+                                                        }}
+                                                        className="px-2.5 py-1.5 bg-black/80 border border-gray-800 rounded-lg text-xs text-gray-300 focus:outline-none focus:border-[#f70776]"
+                                                    >
+                                                        <option value="">+ Insert from Vault...</option>
+                                                        {mediaList.filter(m => m.type === 'video').map(v => (
+                                                            <option key={v.id} value={v.url}>
+                                                                {v.title} ({v.category || 'General'})
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                )}
+                                            </div>
+
+                                            {/* Mini Live Preview Track */}
+                                            {(newPlan.videos || []).filter(Boolean).length > 0 && (
+                                                <div className="pt-2 border-t border-gray-800">
+                                                    <span className="text-[10px] font-semibold text-gray-400 block mb-1.5">Live Preview Carousel:</span>
+                                                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                                                        {(newPlan.videos || []).filter(Boolean).map((vSrc, pIdx) => (
+                                                            <div key={pIdx} className="relative w-28 h-20 rounded-lg overflow-hidden shrink-0 border border-white/20 bg-black">
+                                                                <video
+                                                                    src={vSrc}
+                                                                    className="w-full h-full object-cover"
+                                                                    muted
+                                                                    loop
+                                                                    autoPlay
+                                                                    playsInline
+                                                                />
+                                                                <span className="absolute top-1 left-1 text-[8px] bg-black/80 text-white px-1 rounded">
+                                                                    Cam #{pIdx + 1}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div>
@@ -1478,7 +1681,7 @@ const MediaManager = ({ onLogout }) => {
                         {/* EDIT PRICING PLAN MODAL */}
                         {editingPlan && (
                             <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-                                <div className="bg-[#1C1717] border border-[#f70776]/40 rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl space-y-5 my-8">
+                                <div className="bg-[#1C1717] border border-[#f70776]/40 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-5 my-8">
                                     <div className="flex items-center justify-between border-b border-[#2B2323] pb-3">
                                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                             <span>🎚️</span> Edit Plan: {editingPlan.name}
@@ -1550,6 +1753,135 @@ const MediaManager = ({ onLogout }) => {
                                                     <option value="gold">Gold VIP</option>
                                                 </select>
                                             </div>
+                                        </div>
+
+                                        {/* MULTI-VIDEO MANAGEMENT SECTION IN EDIT MODAL */}
+                                        <div className="p-4 bg-black/40 border border-[#f70776]/30 rounded-2xl space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <label className="block text-xs font-bold text-white flex items-center gap-1.5">
+                                                    <span>🎬</span> Card Videos (4 to 5 Continuous Autoplay Feeds)
+                                                </label>
+                                                <span className="text-[10px] text-[#f70776] font-semibold">
+                                                    {(editingPlan.videos || (editingPlan.videoUrl ? [editingPlan.videoUrl] : [])).length} Videos Configured
+                                                </span>
+                                            </div>
+
+                                            {/* List of Video URLs */}
+                                            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                                {(editingPlan.videos && editingPlan.videos.length > 0
+                                                    ? editingPlan.videos
+                                                    : editingPlan.videoUrl ? [editingPlan.videoUrl] : ['']
+                                                ).map((vUrl, vIdx) => (
+                                                    <div key={vIdx} className="flex items-center gap-2">
+                                                        <span className="text-[10px] font-bold text-gray-400 w-4">#{vIdx + 1}</span>
+                                                        <input
+                                                            type="url"
+                                                            value={vUrl}
+                                                            onChange={e => {
+                                                                const currentList = editingPlan.videos && editingPlan.videos.length > 0
+                                                                    ? [...editingPlan.videos]
+                                                                    : [editingPlan.videoUrl || ''];
+                                                                currentList[vIdx] = e.target.value;
+                                                                setEditingPlan({
+                                                                    ...editingPlan,
+                                                                    videos: currentList,
+                                                                    videoUrl: currentList[0] || ''
+                                                                });
+                                                            }}
+                                                            placeholder={`Video URL #${vIdx + 1} (e.g. https://assets.mixkit.co/...mp4)`}
+                                                            className="flex-1 px-3 py-1.5 bg-black/60 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-[#f70776]"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const currentList = editingPlan.videos && editingPlan.videos.length > 0
+                                                                    ? [...editingPlan.videos]
+                                                                    : [editingPlan.videoUrl || ''];
+                                                                const updated = currentList.filter((_, idx) => idx !== vIdx);
+                                                                setEditingPlan({
+                                                                    ...editingPlan,
+                                                                    videos: updated,
+                                                                    videoUrl: updated[0] || ''
+                                                                });
+                                                            }}
+                                                            className="px-2 py-1 bg-red-900/30 hover:bg-red-800/60 text-red-300 rounded-lg text-xs cursor-pointer"
+                                                            title="Remove this video"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const currentList = editingPlan.videos && editingPlan.videos.length > 0
+                                                            ? [...editingPlan.videos]
+                                                            : editingPlan.videoUrl ? [editingPlan.videoUrl] : [];
+                                                        setEditingPlan({
+                                                            ...editingPlan,
+                                                            videos: [...currentList, '']
+                                                        });
+                                                    }}
+                                                    className="px-3 py-1.5 bg-[#2B2323] hover:bg-[#f70776]/30 text-white rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                                                >
+                                                    <span>+</span> Add Another Video URL
+                                                </button>
+
+                                                {/* Pick from Vault/Gallery Videos */}
+                                                {mediaList.filter(m => m.type === 'video').length > 0 && (
+                                                    <select
+                                                        onChange={e => {
+                                                            if (e.target.value) {
+                                                                const currentList = editingPlan.videos && editingPlan.videos.length > 0
+                                                                    ? [...editingPlan.videos]
+                                                                    : editingPlan.videoUrl ? [editingPlan.videoUrl] : [];
+                                                                const updated = [...currentList, e.target.value];
+                                                                setEditingPlan({
+                                                                    ...editingPlan,
+                                                                    videos: updated,
+                                                                    videoUrl: updated[0] || ''
+                                                                });
+                                                                e.target.value = '';
+                                                            }
+                                                        }}
+                                                        className="px-2.5 py-1.5 bg-black/80 border border-gray-800 rounded-lg text-xs text-gray-300 focus:outline-none focus:border-[#f70776]"
+                                                    >
+                                                        <option value="">+ Insert from Vault...</option>
+                                                        {mediaList.filter(m => m.type === 'video').map(v => (
+                                                            <option key={v.id} value={v.url}>
+                                                                {v.title} ({v.category || 'General'})
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                )}
+                                            </div>
+
+                                            {/* Mini Live Preview Track */}
+                                            {(editingPlan.videos || (editingPlan.videoUrl ? [editingPlan.videoUrl] : [])).filter(Boolean).length > 0 && (
+                                                <div className="pt-2 border-t border-gray-800">
+                                                    <span className="text-[10px] font-semibold text-gray-400 block mb-1.5">Live Preview Carousel:</span>
+                                                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                                                        {(editingPlan.videos || (editingPlan.videoUrl ? [editingPlan.videoUrl] : [])).filter(Boolean).map((vSrc, pIdx) => (
+                                                            <div key={pIdx} className="relative w-28 h-20 rounded-lg overflow-hidden shrink-0 border border-white/20 bg-black">
+                                                                <video
+                                                                    src={vSrc}
+                                                                    className="w-full h-full object-cover"
+                                                                    muted
+                                                                    loop
+                                                                    autoPlay
+                                                                    playsInline
+                                                                />
+                                                                <span className="absolute top-1 left-1 text-[8px] bg-black/80 text-white px-1 rounded">
+                                                                    Cam #{pIdx + 1}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div>
@@ -1641,6 +1973,133 @@ const MediaManager = ({ onLogout }) => {
                                         </div>
                                     </form>
                                 </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* TAB 5: CLIENT BOOKING INQUIRIES */}
+                {activeTab === 'inquiries' && (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-[#2B2323] pb-4">
+                            <div>
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <span>📥</span> Client Inquiries & Booking Requests
+                                </h3>
+                                <p className="text-xs text-gray-400 mt-1">
+                                    Direct leads submitted from the Soundscape website contact form.
+                                </p>
+                            </div>
+                            <button
+                                onClick={fetchInquiries}
+                                className="px-3 py-1.5 bg-[#1C1717] hover:bg-[#2B2323] border border-[#2B2323] text-gray-300 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                                <span>↻</span> Refresh Inquiries
+                            </button>
+                        </div>
+
+                        {isLoadingInquiries ? (
+                            <div className="text-center py-20 bg-[#141010] border border-[#c3195d]/20 rounded-2xl">
+                                <div className="w-8 h-8 border-2 border-[#f70776] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                                <p className="text-gray-400 text-xs">Loading inquiries from server...</p>
+                            </div>
+                        ) : inquiries.length === 0 ? (
+                            <div className="text-center py-20 bg-[#141010] border border-[#2B2323] rounded-3xl space-y-3">
+                                <div className="text-4xl">📬</div>
+                                <h4 className="text-base font-bold text-white">No Inquiries Received Yet</h4>
+                                <p className="text-xs text-gray-400 max-w-sm mx-auto">
+                                    When clients submit the booking inquiry form on your website, their requests will appear here instantly.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {inquiries.map((inq) => (
+                                    <div
+                                        key={inq.id}
+                                        className="bg-[#1C1717] border border-[#2B2323] hover:border-[#f70776]/40 rounded-3xl p-6 shadow-xl space-y-4 transition-all"
+                                    >
+                                        {/* Header */}
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <h4 className="text-lg font-black text-white">{inq.fullName}</h4>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider bg-[#f70776]/20 text-[#f70776] border border-[#f70776]/30 px-2.5 py-0.5 rounded-full">
+                                                        {inq.eventType || 'Event'}
+                                                    </span>
+                                                    <span className="text-[11px] text-gray-400">
+                                                        {inq.createdAt ? new Date(inq.createdAt).toLocaleString() : 'Recent'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleDeleteInquiry(inq.id)}
+                                                className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer"
+                                                title="Delete Inquiry"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+
+                                        {/* Contact Badges */}
+                                        <div className="flex flex-wrap gap-2 text-xs">
+                                            <a
+                                                href={`mailto:${inq.email}`}
+                                                className="px-3 py-1 bg-black/40 border border-gray-800 hover:border-[#f70776]/60 rounded-xl text-gray-300 hover:text-white transition-colors flex items-center gap-1.5"
+                                            >
+                                                <span>✉️</span> {inq.email}
+                                            </a>
+                                            {inq.phone && (
+                                                <a
+                                                    href={`tel:${inq.phone}`}
+                                                    className="px-3 py-1 bg-black/40 border border-gray-800 hover:border-[#f70776]/60 rounded-xl text-gray-300 hover:text-white transition-colors flex items-center gap-1.5"
+                                                >
+                                                    <span>📞</span> {inq.phone}
+                                                </a>
+                                            )}
+                                        </div>
+
+                                        {/* Required Services */}
+                                        {Array.isArray(inq.services) && inq.services.length > 0 && (
+                                            <div className="space-y-1">
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Required Services:</span>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {inq.services.map((srv, sIdx) => (
+                                                        <span key={sIdx} className="text-[10px] font-semibold bg-[#2B2323] text-gray-300 px-2 py-0.5 rounded-md">
+                                                            {srv}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Message Body */}
+                                        {inq.message && (
+                                            <div className="p-3 bg-black/40 border border-gray-800 rounded-xl text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                                {inq.message}
+                                            </div>
+                                        )}
+
+                                        {/* Action Bar */}
+                                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#2B2323]">
+                                            {inq.phone && (
+                                                <a
+                                                    href={`https://wa.me/${inq.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${inq.fullName}, thank you for contacting Soundscape! We received your booking request for ${inq.eventType}.`)}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="px-3 py-1.5 bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/40 text-[#25D366] rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                                >
+                                                    <span>💬 WhatsApp</span>
+                                                </a>
+                                            )}
+                                            <a
+                                                href={`mailto:${inq.email}?subject=${encodeURIComponent(`Soundscape Booking: ${inq.eventType}`)}`}
+                                                className="px-4 py-1.5 bg-[#f70776] hover:bg-[#c3195d] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                            >
+                                                <span>Reply via Email</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
