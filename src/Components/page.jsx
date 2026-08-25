@@ -617,7 +617,7 @@ const MediaManager = ({ onLogout }) => {
                     <div>
                         <div className="flex items-center space-x-3">
                             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#f70776] tracking-wide">
-                                SOUNDSCAPE <span className="text-white text-base font-normal">Admin Studio</span>
+                                SS AUDIOS <span className="text-white text-base font-normal">Admin Studio</span>
                             </h1>
                             {serverStatus === 'connected' && (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-500/20 text-green-400 border border-green-500/30">
@@ -989,7 +989,7 @@ const MediaManager = ({ onLogout }) => {
                                         <span>Uploading to Server...</span>
                                     </>
                                 ) : (
-                                    <span>Upload & Sync to Soundscape</span>
+                                    <span>Upload & Sync to SS Audios</span>
                                 )}
                             </button>
                         </form>
@@ -2166,46 +2166,32 @@ const MediaManager = ({ onLogout }) => {
                                                 )}
                                             </div>
 
-                                            {/* Required Services */}
-                                            {Array.isArray(inq.services) && inq.services.length > 0 && (
-                                                <div className="space-y-1">
-                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Required Services:</span>
-                                                    <div className="flex flex-wrap gap-1.5">
-                                                        {inq.services.map((srv, sIdx) => (
-                                                            <span key={sIdx} className="text-[10px] font-semibold bg-[#2B2323] text-gray-300 px-2 py-0.5 rounded-md">
-                                                                {srv}
-                                                            </span>
-                                                        ))}
+                                                {/* Message Body */}
+                                                {inq.message && (
+                                                    <div className="p-3 bg-black/40 border border-gray-800 rounded-xl text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                                        {inq.message}
                                                     </div>
-                                                </div>
-                                            )}
-
-                                            {/* Message Body */}
-                                            {inq.message && (
-                                                <div className="p-3 bg-black/40 border border-gray-800 rounded-xl text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">
-                                                    {inq.message}
-                                                </div>
-                                            )}
-
-                                            {/* Action Bar */}
-                                            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#2B2323]">
-                                                {inq.phone && (
-                                                    <a
-                                                        href={`https://wa.me/${inq.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${inq.fullName}, thank you for contacting Soundscape! We received your booking request for ${inq.corporateName || inq.eventType || 'your event'}.`)}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="px-3 py-1.5 bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/40 text-[#25D366] rounded-xl text-xs font-bold transition-all flex items-center gap-1"
-                                                    >
-                                                        <span>💬 WhatsApp</span>
-                                                    </a>
                                                 )}
-                                                <a
-                                                    href={`mailto:${inq.email}?subject=${encodeURIComponent(`Soundscape Booking: ${inq.corporateName || inq.eventType || 'Inquiry'}`)}`}
-                                                    className="px-4 py-1.5 bg-[#f70776] hover:bg-[#c3195d] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1"
-                                                >
-                                                    <span>Reply via Email</span>
-                                                </a>
-                                            </div>
+
+                                                {/* Action Bar */}
+                                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#2B2323]">
+                                                    {inq.phone && (
+                                                        <a
+                                                            href={`https://wa.me/${inq.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${inq.fullName}, thank you for contacting SS Audios! We received your booking request for ${inq.corporateName || inq.eventType || 'your event'}.`)}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="px-3 py-1.5 bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/40 text-[#25D366] rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                                        >
+                                                            <span>💬 WhatsApp</span>
+                                                        </a>
+                                                    )}
+                                                    <a
+                                                        href={`mailto:${inq.email}?subject=${encodeURIComponent(`SS Audios Booking: ${inq.corporateName || inq.eventType || 'Inquiry'}`)}`}
+                                                        className="px-4 py-1.5 bg-[#f70776] hover:bg-[#c3195d] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                                    >
+                                                        <span>Reply via Email</span>
+                                                    </a>
+                                                </div>
                                         </div>
                                     );
                                 })}

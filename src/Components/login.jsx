@@ -159,7 +159,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                     <span className="w-1 h-1 bg-[#141010] rounded-full"></span>
                                 </div>
                                 <h1 className="text-xl font-black tracking-wider text-white">
-                                    SOUND<span className="text-[#f70776]">SCAPE</span>
+                                    SS <span className="text-[#f70776]">AUDIOS</span>
                                 </h1>
                             </div>
                             <span className="text-[10px] font-semibold uppercase tracking-wider text-[#A69B9B] px-2.5 py-1 rounded-full bg-[#141010] border border-[#2B2323]">
@@ -169,7 +169,7 @@ const LoginPage = ({ onLoginSuccess }) => {
 
                         <div>
                             <h2 className="text-2xl font-extrabold text-white mb-0.5">Welcome Back</h2>
-                            <p className="text-[#A69B9B] text-xs font-light">Enter credentials to synchronize audio studio</p>
+                            <p className="text-[#A69B9B] text-xs font-light">Enter credentials to unlock SS Audios Studio</p>
                         </div>
                     </div>
 
