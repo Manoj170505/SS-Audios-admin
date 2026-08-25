@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import SoundscapeBackground from './SoundscapeBackground';
 
+const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || 'ssaudios25@gmail.com').toLowerCase().trim();
+const ADMIN_PASSWORD = (import.meta.env.VITE_ADMIN_PASSWORD || 'ssaudios.admin1').trim();
+
 const LoginPage = ({ onLoginSuccess }) => {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
@@ -13,20 +16,26 @@ const LoginPage = ({ onLoginSuccess }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!formData.email || !formData.password) {
+        const inputEmail = (formData.email || '').toLowerCase().trim();
+        const inputPassword = (formData.password || '').trim();
+
+        if (!inputEmail || !inputPassword) {
             setError('Please fill in both email and password.');
             return;
         }
 
         setIsLoading(true);
 
-        // Simulate authentication API call
         setTimeout(() => {
             setIsLoading(false);
-            if (onLoginSuccess) {
-                onLoginSuccess(formData);
+            if (inputEmail === ADMIN_EMAIL && inputPassword === ADMIN_PASSWORD) {
+                if (onLoginSuccess) {
+                    onLoginSuccess(formData);
+                }
+            } else {
+                setError('Invalid administrator email or password.');
             }
-        }, 1000);
+        }, 500);
     };
 
     return (
