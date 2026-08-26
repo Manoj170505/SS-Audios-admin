@@ -153,15 +153,12 @@ const LoginPage = ({ onLoginSuccess }) => {
                     {/* 1. Header Section */}
                     <div>
                         <div className="flex justify-between items-center mb-5">
-                            <div className="flex items-center space-x-2.5">
+                            <div className="flex items-center">
                                 <img
                                     src="/SS.svg"
                                     alt="SS Audios"
-                                    className="h-6 w-auto object-contain drop-shadow-[0_0_10px_rgba(247,7,118,0.6)]"
+                                    className="h-7 sm:h-8 w-auto object-contain drop-shadow-[0_0_12px_rgba(247,7,118,0.7)]"
                                 />
-                                <h1 className="text-xl font-black tracking-wider text-white">
-                                    SS <span className="text-[#f70776]">AUDIOS</span>
-                                </h1>
                             </div>
                             <span className="text-[10px] font-semibold uppercase tracking-wider text-[#A69B9B] px-2.5 py-1 rounded-full bg-[#141010] border border-[#2B2323]">
                                 Admin Portal

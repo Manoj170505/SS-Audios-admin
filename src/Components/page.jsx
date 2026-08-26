@@ -619,10 +619,11 @@ const MediaManager = ({ onLogout }) => {
                             <img
                                 src="/SS.svg"
                                 alt="SS Audios"
-                                className="h-7 sm:h-8 w-auto object-contain drop-shadow-[0_0_12px_rgba(247,7,118,0.6)]"
+                                className="h-8 sm:h-9 w-auto object-contain drop-shadow-[0_0_15px_rgba(247,7,118,0.7)]"
                             />
-                            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-wide">
-                                SS <span className="text-[#f70776]">AUDIOS</span> <span className="text-gray-300 text-base font-normal">Admin Studio</span>
+                            <div className="h-6 w-px bg-neutral-700 hidden sm:block" />
+                            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-wide">
+                                Admin <span className="text-[#f70776]">Studio</span>
                             </h1>
                             {serverStatus === 'connected' && (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-500/20 text-green-400 border border-green-500/30">
