@@ -12,6 +12,18 @@ const DEFAULT_CATEGORIES = [
     "Instrumentals"
 ];
 
+const isImageMedia = (url) => {
+    if (!url || typeof url !== 'string') return false;
+    const clean = url.split('?')[0].toLowerCase();
+    return /\.(jpe?g|png|gif|webp|svg|bmp|avif|tiff)$/i.test(clean) || clean.includes('images.unsplash.com') || clean.includes('format=');
+};
+
+const isVideoMedia = (url) => {
+    if (!url || typeof url !== 'string') return false;
+    const clean = url.split('?')[0].toLowerCase();
+    return /\.(mp4|webm|ogg|mov|m4v|mkv)$/i.test(clean) || clean.includes('assets.mixkit.co/videos') || (!isImageMedia(url) && !url.endsWith('/'));
+};
+
 const MediaManager = ({ onLogout }) => {
     const [activeTab, setActiveTab] = useState('gallery'); // 'gallery' | 'add' | 'services' | 'plans'
     const [filterCategory, setFilterCategory] = useState('All');
@@ -32,6 +44,8 @@ const MediaManager = ({ onLogout }) => {
     const [isSavingPlan, setIsSavingPlan] = useState(false);
     const [isUploadingServiceImage, setIsUploadingServiceImage] = useState(false);
     const [isUploadingPlanMedia, setIsUploadingPlanMedia] = useState(false);
+    const [planMediaUrlInput, setPlanMediaUrlInput] = useState('');
+    const [editPlanMediaUrlInput, setEditPlanMediaUrlInput] = useState('');
 
     // Editing modal states
     const [editingService, setEditingService] = useState(null);
@@ -1422,31 +1436,42 @@ const MediaManager = ({ onLogout }) => {
                                             </span>
                                         </div>
 
-                                        {/* Multi-Video Preview Frame */}
+                                        {/* Multi-Media (Videos & Images) Preview Frame */}
                                         {((plan.videos && plan.videos.length > 0) || plan.videoUrl) && (
                                             <div className="relative rounded-2xl overflow-hidden bg-black/80 border border-white/10 p-2 space-y-2 group">
                                                 <div className="flex items-center justify-between px-1 text-[10px] font-bold text-gray-300">
                                                     <span className="text-[#f70776] flex items-center gap-1">
-                                                        <span>🎬</span> {plan.videos?.length || 1} Stage Videos
+                                                        <span>🎬📸</span> {plan.videos?.length || 1} Media Feeds (Videos & Images)
                                                     </span>
-                                                    <span className="text-gray-400">Autoplaying Left-to-Right</span>
+                                                    <span className="text-gray-400">Autoplaying / Static</span>
                                                 </div>
                                                 <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
-                                                    {(plan.videos && plan.videos.length > 0 ? plan.videos : [plan.videoUrl]).map((vSrc, vidIdx) => (
-                                                        <div key={vidIdx} className="relative w-24 h-16 rounded-lg overflow-hidden shrink-0 border border-white/10 bg-black">
-                                                            <video
-                                                                src={vSrc}
-                                                                className="w-full h-full object-cover"
-                                                                muted
-                                                                loop
-                                                                playsInline
-                                                                autoPlay
-                                                            />
-                                                            <span className="absolute bottom-0.5 right-1 text-[8px] bg-black/80 text-white px-1 rounded">
-                                                                #{vidIdx + 1}
-                                                            </span>
-                                                        </div>
-                                                    ))}
+                                                    {(plan.videos && plan.videos.length > 0 ? plan.videos : [plan.videoUrl]).map((vSrc, vidIdx) => {
+                                                        const isImg = isImageMedia(vSrc);
+                                                        return (
+                                                            <div key={vidIdx} className="relative w-24 h-16 rounded-lg overflow-hidden shrink-0 border border-white/10 bg-black">
+                                                                {isImg ? (
+                                                                    <img
+                                                                        src={vSrc}
+                                                                        alt={`Media ${vidIdx + 1}`}
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                ) : (
+                                                                    <video
+                                                                        src={vSrc}
+                                                                        className="w-full h-full object-cover"
+                                                                        muted
+                                                                        loop
+                                                                        playsInline
+                                                                        autoPlay
+                                                                    />
+                                                                )}
+                                                                <span className={`absolute bottom-0.5 right-1 text-[8px] px-1 rounded font-bold ${isImg ? 'bg-cyan-900/90 text-cyan-200 border border-cyan-500/30' : 'bg-pink-900/90 text-pink-200 border border-pink-500/30'}`}>
+                                                                    {isImg ? 'IMG' : 'VID'} #{vidIdx + 1}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         )}
@@ -1569,20 +1594,21 @@ const MediaManager = ({ onLogout }) => {
                                             </div>
                                         </div>
 
-                                        {/* MULTI-MEDIA / VIDEO MANAGEMENT SECTION WITH FOLDER UPLOAD */}
+                                        {/* MULTI-MEDIA (VIDEOS & IMAGES) MANAGEMENT SECTION */}
                                         <div className="p-4 bg-black/40 border border-[#f70776]/30 rounded-2xl space-y-3">
                                             <div className="flex items-center justify-between">
                                                 <label className="block text-xs font-bold text-white flex items-center gap-1.5">
-                                                    <span>🎬</span> Plan Showcase Media (Videos / Stage Visuals)
+                                                    <span>🎬📸</span> Plan Showcase Media (Videos & Images)
                                                 </label>
                                                 <span className="text-[10px] text-[#f70776] font-semibold">
                                                     {(newPlan.videos || []).length} Media Configured
                                                 </span>
                                             </div>
 
-                                            {/* Folder Upload Button */}
-                                            <div>
-                                                <label className="flex items-center justify-center gap-2 px-4 py-2.5 bg-black/60 hover:bg-black/80 border border-dashed border-gray-600 hover:border-[#f70776] rounded-xl text-xs font-semibold text-gray-300 hover:text-white cursor-pointer transition-all">
+                                            {/* Folder Upload & URL Input Row */}
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {/* Folder Upload Button */}
+                                                <label className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/60 hover:bg-black/80 border border-dashed border-gray-600 hover:border-[#f70776] rounded-xl text-xs font-semibold text-gray-300 hover:text-white cursor-pointer transition-all">
                                                     <input
                                                         type="file"
                                                         accept="video/*,image/*"
@@ -1600,7 +1626,7 @@ const MediaManager = ({ onLogout }) => {
                                                                     videos: [...current, url],
                                                                     videoUrl: current[0] || url
                                                                 }));
-                                                                showNotification('Media uploaded from folders successfully!');
+                                                                showNotification('Media file uploaded successfully!');
                                                             } catch (err) {
                                                                 alert('Failed to upload media file: ' + err.message);
                                                             } finally {
@@ -1609,61 +1635,106 @@ const MediaManager = ({ onLogout }) => {
                                                         }}
                                                     />
                                                     {isUploadingPlanMedia ? (
-                                                        <span className="text-[#f70776] font-bold">Uploading from device...</span>
+                                                        <span className="text-[#f70776] font-bold animate-pulse">Uploading file...</span>
                                                     ) : (
                                                         <>
                                                             <span>📁</span>
-                                                            <span>Upload Video / Image from Folders</span>
+                                                            <span>Upload Image or Video</span>
                                                         </>
                                                     )}
                                                 </label>
+
+                                                {/* Direct URL Input */}
+                                                <div className="flex items-center gap-1">
+                                                    <input
+                                                        type="url"
+                                                        value={planMediaUrlInput}
+                                                        onChange={e => setPlanMediaUrlInput(e.target.value)}
+                                                        placeholder="Or paste media URL (jpg/mp4)..."
+                                                        className="flex-1 px-3 py-2 bg-black/60 border border-gray-700 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#f70776]"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (!planMediaUrlInput.trim()) return;
+                                                            const url = planMediaUrlInput.trim();
+                                                            const current = (newPlan.videos || []).filter(Boolean);
+                                                            setNewPlan(prev => ({
+                                                                ...prev,
+                                                                videos: [...current, url],
+                                                                videoUrl: current[0] || url
+                                                            }));
+                                                            setPlanMediaUrlInput('');
+                                                            showNotification('Media URL added!');
+                                                        }}
+                                                        className="px-3 py-2 bg-[#f70776]/20 hover:bg-[#f70776] text-[#f70776] hover:text-white border border-[#f70776]/40 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                                    >
+                                                        + Add
+                                                    </button>
+                                                </div>
                                             </div>
 
-                                            {/* List of Video Previews & Remove */}
+                                            {/* List of Media Previews & Remove */}
                                             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                                                {(newPlan.videos || []).map((vUrl, vIdx) => (
-                                                    <div key={vIdx} className="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-gray-800">
-                                                        <span className="text-[10px] font-bold text-gray-400 w-4">#{vIdx + 1}</span>
-                                                        <span className="flex-1 text-xs text-gray-300 truncate">{vUrl}</span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const updated = (newPlan.videos || []).filter((_, idx) => idx !== vIdx);
-                                                                setNewPlan({
-                                                                    ...newPlan,
-                                                                    videos: updated,
-                                                                    videoUrl: updated[0] || ''
-                                                                });
-                                                            }}
-                                                            className="px-2 py-1 bg-red-900/30 hover:bg-red-800/60 text-red-300 rounded-lg text-xs cursor-pointer"
-                                                            title="Remove this media"
-                                                        >
-                                                            ✕
-                                                        </button>
-                                                    </div>
-                                                ))}
+                                                {(newPlan.videos || []).map((vUrl, vIdx) => {
+                                                    const isImg = isImageMedia(vUrl);
+                                                    return (
+                                                        <div key={vIdx} className="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-gray-800">
+                                                            <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${isImg ? 'bg-cyan-950 text-cyan-300 border border-cyan-700' : 'bg-pink-950 text-pink-300 border border-pink-700'}`}>
+                                                                {isImg ? 'IMAGE' : 'VIDEO'}
+                                                            </span>
+                                                            <span className="flex-1 text-xs text-gray-300 truncate">{vUrl}</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const updated = (newPlan.videos || []).filter((_, idx) => idx !== vIdx);
+                                                                    setNewPlan({
+                                                                        ...newPlan,
+                                                                        videos: updated,
+                                                                        videoUrl: updated[0] || ''
+                                                                    });
+                                                                }}
+                                                                className="px-2 py-1 bg-red-900/30 hover:bg-red-800/60 text-red-300 rounded-lg text-xs cursor-pointer"
+                                                                title="Remove this media"
+                                                            >
+                                                                ✕
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
 
                                             {/* Live Preview Carousel */}
                                             {(newPlan.videos || []).filter(Boolean).length > 0 && (
                                                 <div className="pt-2 border-t border-gray-800">
                                                     <span className="text-[10px] font-semibold text-gray-400 block mb-1.5">Live Preview:</span>
-                                                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                                                        {(newPlan.videos || []).filter(Boolean).map((vSrc, pIdx) => (
-                                                            <div key={pIdx} className="relative w-28 h-20 rounded-lg overflow-hidden shrink-0 border border-white/20 bg-black">
-                                                                <video
-                                                                    src={vSrc}
-                                                                    className="w-full h-full object-cover"
-                                                                    muted
-                                                                    loop
-                                                                    autoPlay
-                                                                    playsInline
-                                                                />
-                                                                <span className="absolute top-1 left-1 text-[8px] bg-black/80 text-white px-1 rounded">
-                                                                    Media #{pIdx + 1}
-                                                                </span>
-                                                            </div>
-                                                        ))}
+                                                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                                                        {(newPlan.videos || []).filter(Boolean).map((vSrc, pIdx) => {
+                                                            const isImg = isImageMedia(vSrc);
+                                                            return (
+                                                                <div key={pIdx} className="relative w-28 h-20 rounded-lg overflow-hidden shrink-0 border border-white/20 bg-black">
+                                                                    {isImg ? (
+                                                                        <img
+                                                                            src={vSrc}
+                                                                            alt={`Media ${pIdx + 1}`}
+                                                                            className="w-full h-full object-cover"
+                                                                        />
+                                                                    ) : (
+                                                                        <video
+                                                                            src={vSrc}
+                                                                            className="w-full h-full object-cover"
+                                                                            muted
+                                                                            loop
+                                                                            autoPlay
+                                                                            playsInline
+                                                                        />
+                                                                    )}
+                                                                    <span className={`absolute top-1 left-1 text-[8px] px-1 rounded font-bold ${isImg ? 'bg-cyan-900/90 text-cyan-200' : 'bg-pink-900/90 text-pink-200'}`}>
+                                                                        {isImg ? 'IMG' : 'VID'} #{pIdx + 1}
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
                                             )}
@@ -1828,20 +1899,21 @@ const MediaManager = ({ onLogout }) => {
                                             </div>
                                         </div>
 
-                                        {/* MULTI-MEDIA / VIDEO MANAGEMENT SECTION IN EDIT MODAL */}
+                                        {/* MULTI-MEDIA (VIDEOS & IMAGES) MANAGEMENT SECTION IN EDIT MODAL */}
                                         <div className="p-4 bg-black/40 border border-[#f70776]/30 rounded-2xl space-y-3">
                                             <div className="flex items-center justify-between">
                                                 <label className="block text-xs font-bold text-white flex items-center gap-1.5">
-                                                    <span>🎬</span> Plan Showcase Media (Videos / Stage Visuals)
+                                                    <span>🎬📸</span> Plan Showcase Media (Videos & Images)
                                                 </label>
                                                 <span className="text-[10px] text-[#f70776] font-semibold">
                                                     {(editingPlan.videos || (editingPlan.videoUrl ? [editingPlan.videoUrl] : [])).length} Media Configured
                                                 </span>
                                             </div>
 
-                                            {/* Folder Upload Button */}
-                                            <div>
-                                                <label className="flex items-center justify-center gap-2 px-4 py-2.5 bg-black/60 hover:bg-black/80 border border-dashed border-gray-600 hover:border-[#f70776] rounded-xl text-xs font-semibold text-gray-300 hover:text-white cursor-pointer transition-all">
+                                            {/* Folder Upload & URL Input Row */}
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {/* Folder Upload Button */}
+                                                <label className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/60 hover:bg-black/80 border border-dashed border-gray-600 hover:border-[#f70776] rounded-xl text-xs font-semibold text-gray-300 hover:text-white cursor-pointer transition-all">
                                                     <input
                                                         type="file"
                                                         accept="video/*,image/*"
@@ -1862,7 +1934,7 @@ const MediaManager = ({ onLogout }) => {
                                                                     videos: updated,
                                                                     videoUrl: updated[0] || url
                                                                 }));
-                                                                showNotification('Media uploaded from folders successfully!');
+                                                                showNotification('Media file uploaded successfully!');
                                                             } catch (err) {
                                                                 alert('Failed to upload media file: ' + err.message);
                                                             } finally {
@@ -1871,14 +1943,46 @@ const MediaManager = ({ onLogout }) => {
                                                         }}
                                                     />
                                                     {isUploadingPlanMedia ? (
-                                                        <span className="text-[#f70776] font-bold">Uploading from device...</span>
+                                                        <span className="text-[#f70776] font-bold animate-pulse">Uploading file...</span>
                                                     ) : (
                                                         <>
                                                             <span>📁</span>
-                                                            <span>Upload Video / Image from Folders</span>
+                                                            <span>Upload Image or Video</span>
                                                         </>
                                                     )}
                                                 </label>
+
+                                                {/* Direct URL Input */}
+                                                <div className="flex items-center gap-1">
+                                                    <input
+                                                        type="url"
+                                                        value={editPlanMediaUrlInput}
+                                                        onChange={e => setEditPlanMediaUrlInput(e.target.value)}
+                                                        placeholder="Or paste media URL (jpg/mp4)..."
+                                                        className="flex-1 px-3 py-2 bg-black/60 border border-gray-700 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#f70776]"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (!editPlanMediaUrlInput.trim()) return;
+                                                            const url = editPlanMediaUrlInput.trim();
+                                                            const currentList = editingPlan.videos && editingPlan.videos.length > 0
+                                                                ? [...editingPlan.videos]
+                                                                : editingPlan.videoUrl ? [editingPlan.videoUrl] : [];
+                                                            const updated = [...currentList, url];
+                                                            setEditingPlan(prev => ({
+                                                                ...prev,
+                                                                videos: updated,
+                                                                videoUrl: updated[0] || url
+                                                            }));
+                                                            setEditPlanMediaUrlInput('');
+                                                            showNotification('Media URL added!');
+                                                        }}
+                                                        className="px-3 py-2 bg-[#f70776]/20 hover:bg-[#f70776] text-[#f70776] hover:text-white border border-[#f70776]/40 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                                    >
+                                                        + Add
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             {/* List of Media Previews & Remove */}
@@ -1886,52 +1990,68 @@ const MediaManager = ({ onLogout }) => {
                                                 {(editingPlan.videos && editingPlan.videos.length > 0
                                                     ? editingPlan.videos
                                                     : editingPlan.videoUrl ? [editingPlan.videoUrl] : []
-                                                ).map((vUrl, vIdx) => (
-                                                    <div key={vIdx} className="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-gray-800">
-                                                        <span className="text-[10px] font-bold text-gray-400 w-4">#{vIdx + 1}</span>
-                                                        <span className="flex-1 text-xs text-gray-300 truncate">{vUrl}</span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const currentList = editingPlan.videos && editingPlan.videos.length > 0
-                                                                    ? [...editingPlan.videos]
-                                                                    : editingPlan.videoUrl ? [editingPlan.videoUrl] : [];
-                                                                const updated = currentList.filter((_, idx) => idx !== vIdx);
-                                                                setEditingPlan({
-                                                                    ...editingPlan,
-                                                                    videos: updated,
-                                                                    videoUrl: updated[0] || ''
-                                                                });
-                                                            }}
-                                                            className="px-2 py-1 bg-red-900/30 hover:bg-red-800/60 text-red-300 rounded-lg text-xs cursor-pointer"
-                                                            title="Remove this media"
-                                                        >
-                                                            ✕
-                                                        </button>
-                                                    </div>
-                                                ))}
+                                                ).map((vUrl, vIdx) => {
+                                                    const isImg = isImageMedia(vUrl);
+                                                    return (
+                                                        <div key={vIdx} className="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-gray-800">
+                                                            <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${isImg ? 'bg-cyan-950 text-cyan-300 border border-cyan-700' : 'bg-pink-950 text-pink-300 border border-pink-700'}`}>
+                                                                {isImg ? 'IMAGE' : 'VIDEO'}
+                                                            </span>
+                                                            <span className="flex-1 text-xs text-gray-300 truncate">{vUrl}</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const currentList = editingPlan.videos && editingPlan.videos.length > 0
+                                                                        ? [...editingPlan.videos]
+                                                                        : editingPlan.videoUrl ? [editingPlan.videoUrl] : [];
+                                                                    const updated = currentList.filter((_, idx) => idx !== vIdx);
+                                                                    setEditingPlan({
+                                                                        ...editingPlan,
+                                                                        videos: updated,
+                                                                        videoUrl: updated[0] || ''
+                                                                    });
+                                                                }}
+                                                                className="px-2 py-1 bg-red-900/30 hover:bg-red-800/60 text-red-300 rounded-lg text-xs cursor-pointer"
+                                                                title="Remove this media"
+                                                            >
+                                                                ✕
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
 
                                             {/* Live Preview Carousel */}
                                             {(editingPlan.videos || (editingPlan.videoUrl ? [editingPlan.videoUrl] : [])).filter(Boolean).length > 0 && (
                                                 <div className="pt-2 border-t border-gray-800">
                                                     <span className="text-[10px] font-semibold text-gray-400 block mb-1.5">Live Preview:</span>
-                                                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                                                        {(editingPlan.videos || (editingPlan.videoUrl ? [editingPlan.videoUrl] : [])).filter(Boolean).map((vSrc, pIdx) => (
-                                                            <div key={pIdx} className="relative w-28 h-20 rounded-lg overflow-hidden shrink-0 border border-white/20 bg-black">
-                                                                <video
-                                                                    src={vSrc}
-                                                                    className="w-full h-full object-cover"
-                                                                    muted
-                                                                    loop
-                                                                    autoPlay
-                                                                    playsInline
-                                                                />
-                                                                <span className="absolute top-1 left-1 text-[8px] bg-black/80 text-white px-1 rounded">
-                                                                    Media #{pIdx + 1}
-                                                                </span>
-                                                            </div>
-                                                        ))}
+                                                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                                                        {(editingPlan.videos || (editingPlan.videoUrl ? [editingPlan.videoUrl] : [])).filter(Boolean).map((vSrc, pIdx) => {
+                                                            const isImg = isImageMedia(vSrc);
+                                                            return (
+                                                                <div key={pIdx} className="relative w-28 h-20 rounded-lg overflow-hidden shrink-0 border border-white/20 bg-black">
+                                                                    {isImg ? (
+                                                                        <img
+                                                                            src={vSrc}
+                                                                            alt={`Media ${pIdx + 1}`}
+                                                                            className="w-full h-full object-cover"
+                                                                        />
+                                                                    ) : (
+                                                                        <video
+                                                                            src={vSrc}
+                                                                            className="w-full h-full object-cover"
+                                                                            muted
+                                                                            loop
+                                                                            autoPlay
+                                                                            playsInline
+                                                                        />
+                                                                    )}
+                                                                    <span className={`absolute top-1 left-1 text-[8px] px-1 rounded font-bold ${isImg ? 'bg-cyan-900/90 text-cyan-200' : 'bg-pink-900/90 text-pink-200'}`}>
+                                                                        {isImg ? 'IMG' : 'VID'} #{pIdx + 1}
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
                                             )}
