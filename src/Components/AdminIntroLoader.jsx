@@ -287,10 +287,12 @@ export default function AdminIntroLoader({ onComplete }) {
           <div className="absolute inset-2 rounded-full border border-dashed border-[#F70776]/60 animate-spin" style={{ animationDuration: "12s" }} />
           <div className="absolute inset-4 rounded-full bg-gradient-to-tr from-[#C3195D] via-[#F70776] to-[#FF8C00] opacity-20 blur-xl animate-pulse" />
           
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#141010]/90 border border-[#F70776] shadow-[0_0_40px_rgba(247,7,118,0.6)] flex items-center justify-center backdrop-blur-md transform hover:scale-105 transition-transform">
-            <span className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-[#FAF6F6] to-[#F70776]">
-              SS
-            </span>
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#141010]/90 border border-[#F70776] shadow-[0_0_40px_rgba(247,7,118,0.6)] flex items-center justify-center backdrop-blur-md transform hover:scale-105 transition-transform p-3 sm:p-4">
+            <img
+              src="/SS.svg"
+              alt="SS Audios"
+              className="w-full h-auto object-contain drop-shadow-[0_0_20px_rgba(247,7,118,0.9)]"
+            />
           </div>
         </div>
 

@@ -143,13 +143,14 @@ const LoginPageVinylTurntable = ({ onLoginSuccess }) => {
                 <div className="relative md:w-1/2 bg-[#1C1717]/95 p-8 sm:p-10 flex flex-col justify-between shrink-0 overflow-hidden border-t md:border-t-0 md:border-l border-[#2B2323]">
                     <div>
                         <div className="flex justify-between items-center mb-6">
-                            <div className="flex items-center space-x-2">
-                                <div className="w-7 h-7 rounded-full bg-[#f70776] flex items-center justify-between px-1.5 py-2">
-                                    <span className="w-1 h-1 bg-[#141010] rounded-full"></span>
-                                    <span className="w-1 h-1 bg-[#141010] rounded-full"></span>
-                                </div>
+                            <div className="flex items-center space-x-2.5">
+                                <img
+                                    src="/SS.svg"
+                                    alt="SS Audios"
+                                    className="h-6 w-auto object-contain drop-shadow-[0_0_10px_rgba(247,7,118,0.6)]"
+                                />
                                 <h1 className="text-xl font-black tracking-wider text-white">
-                                    SOUND<span className="text-[#f70776]">SCAPE</span>
+                                    SS <span className="text-[#f70776]">AUDIOS</span>
                                 </h1>
                             </div>
                             <span className="text-[10px] font-semibold uppercase tracking-wider text-[#A69B9B] px-2.5 py-1 rounded-full bg-[#141010] border border-[#2B2323]">
@@ -234,9 +235,9 @@ const LoginPageVinylTurntable = ({ onLoginSuccess }) => {
                                                 : 'none'
                                     }}
                                 >
-                                    <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#c3195d] to-[#f70776] border-2 border-black flex flex-col items-center justify-center text-center">
-                                        <span className="text-[9px] font-black text-white">SS</span>
-                                        <span className="text-[7px] font-bold text-white/90">AUDIOS</span>
+                                    <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#c3195d] to-[#f70776] border-2 border-black flex flex-col items-center justify-center text-center p-1 shadow-inner">
+                                        <img src="/SS.svg" alt="SS Audios" className="h-3.5 w-auto object-contain brightness-200 drop-shadow" />
+                                        <span className="text-[6.5px] font-black text-white/90 uppercase tracking-wider mt-0.5">AUDIOS</span>
                                     </div>
                                 </div>
                             </div>

@@ -616,8 +616,13 @@ const MediaManager = ({ onLogout }) => {
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 border-b border-[#c3195d]/30 pb-4 gap-4">
                     <div>
                         <div className="flex items-center space-x-3">
-                            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#f70776] tracking-wide">
-                                SS AUDIOS <span className="text-white text-base font-normal">Admin Studio</span>
+                            <img
+                                src="/SS.svg"
+                                alt="SS Audios"
+                                className="h-7 sm:h-8 w-auto object-contain drop-shadow-[0_0_12px_rgba(247,7,118,0.6)]"
+                            />
+                            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-wide">
+                                SS <span className="text-[#f70776]">AUDIOS</span> <span className="text-gray-300 text-base font-normal">Admin Studio</span>
                             </h1>
                             {serverStatus === 'connected' && (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-500/20 text-green-400 border border-green-500/30">

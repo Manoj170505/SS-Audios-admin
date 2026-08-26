@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 32 32">
+  <!-- Generator: Adobe Illustrator 30.5.1, SVG Export Plug-In . SVG Version: 2.1.4 Build 3)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #faf6f6;
+        font-family: GillSansMT, 'Gill Sans MT';
+        font-size: 3.89px;
+        letter-spacing: .05em;
+        stroke: #faf6f6;
+        stroke-linejoin: round;
+        stroke-width: .15px;
+      }
+
+      .st1 {
+        fill: #f70776;
+        stroke-width: .1px;
+      }
+
+      .st1, .st2 {
+        stroke: #f70776;
+        stroke-miterlimit: 10;
+      }
+
+      .st2 {
+        fill: none;
+        stroke-linecap: round;
+        stroke-width: .19px;
+      }
+    </style>
+  </defs>
+  <g>
+    <path class="st1" d="M11.96,15.86c.05.11.07.23.07.35,0,.11-.02.22-.06.32-.09.25-.3.44-.55.53h-2.37l.53-.53h1.62c.19,0,.34-.15.34-.34,0-.17-.13-.32-.3-.33-.01,0-.02,0-.04,0s-.02,0-.03,0h-1.41c-.24-.1-.42-.29-.51-.53-.04-.09-.05-.2-.05-.3s.02-.19.05-.28c.08-.25.28-.45.53-.55h2.4l-.55.55h-1.58c-.19,0-.34.13-.34.29s.15.3.34.3h1.28c.29.07.53.27.64.53Z"/>
+    <path class="st1" d="M6.96,15.86c.05.11.07.23.07.35,0,.11-.02.22-.06.32-.09.25-.3.44-.55.53h-2.37l.53-.53h1.62c.19,0,.34-.15.34-.34,0-.17-.13-.32-.3-.33-.01,0-.02,0-.04,0s-.02,0-.03,0h-1.41c-.24-.1-.42-.29-.51-.53-.04-.09-.05-.2-.05-.3s.02-.19.05-.28c.08-.25.28-.45.53-.55h2.4l-.55.55h-1.58c-.19,0-.34.13-.34.29s.15.3.34.3h1.28c.29.07.53.27.64.53Z"/>
+    <line class="st2" x1="7.41" y1="15.45" x2="7.41" y2="16.09"/>
+    <line class="st2" x1="7.79" y1="15.07" x2="7.79" y2="16.47"/>
+    <line class="st2" x1="8.99" y1="15.45" x2="8.99" y2="16.09"/>
+    <line class="st2" x1="8.61" y1="15.07" x2="8.61" y2="16.47"/>
+    <line class="st2" x1="8.2" y1="14.64" x2="8.2" y2="16.9"/>
+  </g>
+  <text class="st0" transform="translate(12.79 17.09)"><tspan x="0" y="0">AUDIOS</tspan></text>
+</svg>
