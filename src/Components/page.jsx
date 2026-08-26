@@ -1065,10 +1065,7 @@ const MediaManager = ({ onLogout }) => {
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-[#1C1717] via-transparent to-black/60" />
-                                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-                                            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md text-white border border-white/10">
-                                                0{service.id}
-                                            </span>
+                                        <div className="absolute top-3 left-3 right-3 flex items-center justify-end">
                                             <span className="text-xs font-black px-3 py-1 rounded-full bg-[#f70776] text-white shadow-lg">
                                                 {service.price}
                                             </span>
