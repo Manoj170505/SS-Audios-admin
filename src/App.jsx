@@ -18,30 +18,9 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#141010] relative overflow-hidden">
-      <style>{`
-        @keyframes adminPanelArrive {
-          0% {
-            opacity: 0;
-            transform: scale(0.95) translateY(24px);
-            filter: blur(8px);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-            filter: blur(0);
-          }
-        }
-
-        .admin-panel-enter {
-          animation: adminPanelArrive 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-      `}</style>
-
+    <div className="min-h-screen bg-[#141010] relative">
       {isAuthenticated ? (
-        <div className="admin-panel-enter">
-          <MediaManager onLogout={handleLogout} />
-        </div>
+        <MediaManager onLogout={handleLogout} />
       ) : (
         <LoginPage onLoginSuccess={handleLoginSuccess} />
       )}

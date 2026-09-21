@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ss-audios-backend-production.up.railway.app/api';
 
@@ -6,10 +6,12 @@ const DEFAULT_CATEGORIES = [
     "Wedding",
     "Orchestra",
     "Audios&Lightings",
-    "Corporate & Collages",
+    "Corporate & Colleges",
     "Welcome Dance",
     "DJ Events",
-    "Instrumentals"
+    "Instrumentals",
+    "Raga Studio",
+    "Sampoorna Academy"
 ];
 
 const isImageMedia = (url) => {
@@ -25,39 +27,53 @@ const isVideoMedia = (url) => {
 };
 
 const MediaManager = ({ onLogout }) => {
-    const [activeTab, setActiveTab] = useState('gallery'); // 'gallery' | 'add' | 'services' | 'plans'
+    // Navigation Tabs: 'gallery' | 'add' | 'services' | 'plans' | 'inquiries'
+    const [activeTab, setActiveTab] = useState('gallery');
     const [filterCategory, setFilterCategory] = useState('All');
-    const [editingId, setEditingId] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadError, setUploadError] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [mediaTypeFilter, setMediaTypeFilter] = useState('all'); // 'all' | 'image' | 'video'
+
+    // Server & notification state
+    const [serverStatus, setServerStatus] = useState('checking'); // 'online' | 'fallback' | 'checking'
     const [notification, setNotification] = useState(null);
-    const [serverStatus, setServerStatus] = useState('checking');
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Gallery Items fetched from Backend
+    // Data lists
     const [mediaList, setMediaList] = useState([]);
-
-    // Services & Plans state
     const [services, setServices] = useState([]);
     const [plans, setPlans] = useState([]);
+    const [inquiries, setInquiries] = useState([]);
+
+    // Service filter
+    const [serviceCategoryFilter, setServiceCategoryFilter] = useState('All');
+
+    // Loading states
     const [isSavingService, setIsSavingService] = useState(false);
     const [isSavingPlan, setIsSavingPlan] = useState(false);
     const [isUploadingServiceImage, setIsUploadingServiceImage] = useState(false);
     const [isUploadingPlanMedia, setIsUploadingPlanMedia] = useState(false);
+    const [isDirectUploading, setIsDirectUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+
+    // Upload & URL inputs
     const [planMediaUrlInput, setPlanMediaUrlInput] = useState('');
     const [editPlanMediaUrlInput, setEditPlanMediaUrlInput] = useState('');
+    const [quickMediaUrlInput, setQuickMediaUrlInput] = useState('');
 
     // Editing modal states
+    const [editingMedia, setEditingMedia] = useState(null);
     const [editingService, setEditingService] = useState(null);
     const [editingPlan, setEditingPlan] = useState(null);
+    const [previewMediaModal, setPreviewMediaModal] = useState(null);
 
     // Create modal states
     const [isAddingService, setIsAddingService] = useState(false);
     const [newService, setNewService] = useState({
         title: '',
+        category: 'DJ Events',
         price: '₹25,000',
         image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=600',
-        description: 'Electrifying DJ and live remix performance designed to keep the crowd energetic and dance floors packed.',
+        description: 'Electrifying DJ and live remix performance designed to keep the crowd energetic and dance floors packed all night.',
         featuresStr: 'Live Stem Remixing\nFestival-Grade Sound Array\nSynchronized Visuals\nDedicated Sound Tech'
     });
 
@@ -65,8 +81,8 @@ const MediaManager = ({ onLogout }) => {
     const [newPlan, setNewPlan] = useState({
         name: '',
         badge: 'SPECIAL TIER',
-        price: '$499',
-        monthlyPrice: '$499',
+        price: '₹25,000',
+        monthlyPrice: '₹25,000',
         period: '/ event',
         buttonText: 'Choose Plan',
         theme: 'standard',
@@ -84,44 +100,80 @@ const MediaManager = ({ onLogout }) => {
         ]
     });
 
-    // Direct File Upload Form State
-    const [formData, setFormData] = useState({
+    // Upload Form State (Tab 2)
+    const [uploadFormData, setUploadFormData] = useState({
         title: '',
         category: 'Wedding',
         customCategory: '',
         type: 'image',
-        selectedFile: null
+        selectedFile: null,
+        filePreview: null
     });
 
-    const [editFormData, setEditFormData] = useState({ title: '', category: '' });
-
-    // Show temporary notification toast
+    // Notification toast helper
     const showNotification = (msg, type = 'success') => {
         setNotification({ msg, type });
-        setTimeout(() => setNotification(null), 4000);
+        setTimeout(() => setNotification(null), 3500);
     };
 
-    // Fetch media from backend
-    const fetchMedia = async () => {
+    // Prevent background page scrolling when any modal is active
+    useEffect(() => {
+        const hasOpenModal = Boolean(
+            isAddingService ||
+            editingService ||
+            isAddingPlan ||
+            editingPlan ||
+            previewMediaModal ||
+            editingMedia
+        );
+
+        if (hasOpenModal) {
+            const originalOverflow = document.body.style.overflow;
+            const originalTouchAction = document.body.style.touchAction;
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+
+            return () => {
+                document.body.style.overflow = originalOverflow;
+                document.body.style.touchAction = originalTouchAction;
+            };
+        }
+    }, [isAddingService, editingService, isAddingPlan, editingPlan, previewMediaModal, editingMedia]);
+
+    // -------------------------------------------------------------
+    // INITIAL FETCH DATA
+    // -------------------------------------------------------------
+    useEffect(() => {
+        fetchAllData();
+    }, []);
+
+    const fetchAllData = async () => {
         setIsLoading(true);
+        await Promise.all([
+            fetchMedia(),
+            fetchServices(),
+            fetchPlans(),
+            fetchInquiries()
+        ]);
+        setIsLoading(false);
+    };
+
+    const fetchMedia = async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/media`);
             const data = await res.json();
             if (data.success && Array.isArray(data.data)) {
                 setMediaList(data.data);
-                setServerStatus('connected');
+                setServerStatus('online');
             } else {
-                setServerStatus('error');
+                setServerStatus('fallback');
             }
         } catch (err) {
-            console.error('Failed to connect to backend:', err);
-            setServerStatus('offline');
-        } finally {
-            setIsLoading(false);
+            console.warn('API /media fallback:', err.message);
+            setServerStatus('fallback');
         }
     };
 
-    // Fetch services from backend
     const fetchServices = async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/services`);
@@ -130,11 +182,10 @@ const MediaManager = ({ onLogout }) => {
                 setServices(data.data);
             }
         } catch (err) {
-            console.error('Failed to fetch services:', err);
+            console.warn('API /services fallback:', err.message);
         }
     };
 
-    // Fetch plans from backend
     const fetchPlans = async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/plans`);
@@ -143,19 +194,11 @@ const MediaManager = ({ onLogout }) => {
                 setPlans(data.data);
             }
         } catch (err) {
-            console.error('Failed to fetch plans:', err);
+            console.warn('API /plans fallback:', err.message);
         }
     };
 
-    // Booking Inquiries State
-    const [inquiries, setInquiries] = useState([]);
-    const [selectedInquiries, setSelectedInquiries] = useState([]);
-    const [isLoadingInquiries, setIsLoadingInquiries] = useState(false);
-    const [isDeletingInquiries, setIsDeletingInquiries] = useState(false);
-
-    // Fetch inquiries from backend
     const fetchInquiries = async () => {
-        setIsLoadingInquiries(true);
         try {
             const res = await fetch(`${API_BASE_URL}/inquiries`);
             const data = await res.json();
@@ -163,216 +206,165 @@ const MediaManager = ({ onLogout }) => {
                 setInquiries(data.data);
             }
         } catch (err) {
-            console.error('Failed to fetch inquiries:', err);
-        } finally {
-            setIsLoadingInquiries(false);
+            console.warn('API /inquiries fallback:', err.message);
         }
     };
 
-    const handleToggleSelectInquiry = (id) => {
-        setSelectedInquiries(prev => 
-            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-        );
-    };
+    // -------------------------------------------------------------
+    // FILE UPLOAD HELPER (Direct multipart upload)
+    // -------------------------------------------------------------
+    const handleUploadMediaFile = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('category', 'Uploaded');
+        formData.append('title', file.name.replace(/\.[^/.]+$/, ''));
 
-    const handleSelectAllInquiries = () => {
-        if (selectedInquiries.length === inquiries.length && inquiries.length > 0) {
-            setSelectedInquiries([]);
+        const res = await fetch(`${API_BASE_URL}/upload`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (data.success && data.data?.url) {
+            return data.data.url;
+        } else if (data.url) {
+            return data.url;
         } else {
-            setSelectedInquiries(inquiries.map(inq => inq.id));
+            throw new Error(data.message || 'File upload failed');
         }
     };
 
-    const handleDeleteInquiry = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this booking inquiry?')) return;
-        try {
-            const res = await fetch(`${API_BASE_URL}/inquiries/${id}`, { method: 'DELETE' });
-            const data = await res.json();
-            if (data.success) {
-                setInquiries(prev => prev.filter(inq => inq.id !== id));
-                setSelectedInquiries(prev => prev.filter(item => item !== id));
-                showNotification('Inquiry deleted successfully');
-            }
-        } catch (err) {
-            showNotification('Failed to delete inquiry', 'error');
-        }
-    };
-
-    const handleBulkDeleteInquiries = async () => {
-        if (selectedInquiries.length === 0) return;
-        const confirmMsg = selectedInquiries.length === inquiries.length
-            ? `Are you sure you want to delete all ${selectedInquiries.length} inquiries?`
-            : `Are you sure you want to delete ${selectedInquiries.length} selected inquiries?`;
-        
-        if (!window.confirm(confirmMsg)) return;
-
-        setIsDeletingInquiries(true);
-        try {
-            const res = await fetch(`${API_BASE_URL}/inquiries/bulk-delete`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids: selectedInquiries })
-            });
-            const data = await res.json();
-            if (data.success) {
-                setInquiries(prev => prev.filter(inq => !selectedInquiries.includes(inq.id)));
-                setSelectedInquiries([]);
-                showNotification(`Deleted ${selectedInquiries.length} inquiries successfully`);
-            } else {
-                showNotification(data.message || 'Failed to delete inquiries', 'error');
-            }
-        } catch (err) {
-            showNotification('Error deleting inquiries', 'error');
-        } finally {
-            setIsDeletingInquiries(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchMedia();
-        fetchServices();
-        fetchPlans();
-        fetchInquiries();
-    }, []);
-
-    // Handle Local File Selection
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setFormData(prev => ({
-                ...prev,
-                selectedFile: file,
-                title: prev.title ? prev.title : file.name.replace(/\.[^/.]+$/, '')
-            }));
-            setUploadError('');
-        }
-    };
-
-    // Handle Form Inputs
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    // Add Item to Gallery via Backend S3 & DynamoDB Upload
-    const handleAddMedia = async (e) => {
+    // -------------------------------------------------------------
+    // DIRECT GALLERY MEDIA HANDLERS
+    // -------------------------------------------------------------
+    const handleDirectUploadSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.title || !formData.selectedFile) {
-            setUploadError('Please select a file and provide a title.');
+        if (!uploadFormData.selectedFile && !quickMediaUrlInput.trim()) {
+            alert('Please select a file to upload or enter a media URL.');
             return;
         }
 
-        setIsUploading(true);
-        setUploadError('');
+        setIsDirectUploading(true);
+        setUploadProgress(20);
 
         try {
-            const finalCategory = (formData.category === 'Others' && formData.customCategory?.trim())
-                ? formData.customCategory.trim()
-                : formData.category;
+            let mediaUrl = quickMediaUrlInput.trim();
+            const finalCategory = uploadFormData.category === 'Custom'
+                ? (uploadFormData.customCategory.trim() || 'General')
+                : uploadFormData.category;
 
-            const uploadPayload = new FormData();
-            uploadPayload.append('file', formData.selectedFile);
-            uploadPayload.append('title', formData.title);
-            uploadPayload.append('category', finalCategory);
-            uploadPayload.append('type', formData.type);
+            if (uploadFormData.selectedFile) {
+                setUploadProgress(50);
+                const formData = new FormData();
+                formData.append('file', uploadFormData.selectedFile);
+                formData.append('title', uploadFormData.title.trim() || uploadFormData.selectedFile.name);
+                formData.append('category', finalCategory);
+                formData.append('type', uploadFormData.type);
 
-            const response = await fetch(`${API_BASE_URL}/media`, {
-                method: 'POST',
-                body: uploadPayload
-            });
-
-            const result = await response.json();
-
-            if (!response.ok || !result.success) {
-                throw new Error(result.message || 'Failed to upload media');
+                const res = await fetch(`${API_BASE_URL}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showNotification('Media asset uploaded and published to gallery!');
+                    setUploadFormData({
+                        title: '',
+                        category: 'Wedding',
+                        customCategory: '',
+                        type: 'image',
+                        selectedFile: null,
+                        filePreview: null
+                    });
+                    setQuickMediaUrlInput('');
+                    fetchMedia();
+                    setActiveTab('gallery');
+                    return;
+                } else {
+                    throw new Error(data.message || 'Upload failed');
+                }
+            } else if (mediaUrl) {
+                // Post as URL media
+                setUploadProgress(70);
+                const res = await fetch(`${API_BASE_URL}/media`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: uploadFormData.title.trim() || 'Media Item',
+                        category: finalCategory,
+                        type: uploadFormData.type,
+                        url: mediaUrl,
+                        createdAt: new Date().toISOString()
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showNotification('Media URL added to gallery!');
+                    setUploadFormData({
+                        title: '',
+                        category: 'Wedding',
+                        customCategory: '',
+                        type: 'image',
+                        selectedFile: null,
+                        filePreview: null
+                    });
+                    setQuickMediaUrlInput('');
+                    fetchMedia();
+                    setActiveTab('gallery');
+                } else {
+                    throw new Error(data.message || 'Failed to save media URL');
+                }
             }
-
-            setMediaList(prev => [result.data, ...prev]);
-            setFormData({ title: '', category: 'Wedding', customCategory: '', type: 'image', selectedFile: null });
-
-            if (e.target) {
-                e.target.reset();
-            }
-
-            showNotification(`"${result.data.title}" uploaded & synced to website!`);
-            setActiveTab('gallery');
         } catch (err) {
-            console.error('Upload error:', err);
-            setUploadError(err.message || 'An error occurred during upload.');
+            console.error('Upload Error:', err);
+            alert('Upload failed: ' + err.message);
         } finally {
-            setIsUploading(false);
+            setIsDirectUploading(false);
+            setUploadProgress(0);
         }
     };
 
-    // Helper to upload an image or video directly from folder for Services and Plans
-    const handleUploadMediaFile = async (file) => {
-        const uploadPayload = new FormData();
-        uploadPayload.append('file', file);
-        const res = await fetch(`${API_BASE_URL}/upload`, {
-            method: 'POST',
-            body: uploadPayload
-        });
-        const result = await res.json();
-        if (!res.ok || !result.success || !result.url) {
-            throw new Error(result.message || 'Failed to upload file');
-        }
-        return result.url;
-    };
-
-    const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this media item?')) return;
-
+    const handleDeleteMedia = async (item) => {
+        if (!window.confirm(`Are you sure you want to delete "${item.title || 'this media item'}"?`)) return;
         try {
-            const res = await fetch(`${API_BASE_URL}/media/${id}`, {
-                method: 'DELETE'
-            });
+            const res = await fetch(`${API_BASE_URL}/media/${item.id}`, { method: 'DELETE' });
             const data = await res.json();
             if (data.success) {
-                setMediaList(prev => prev.filter(item => item.id !== id));
-                showNotification('Media asset deleted.');
+                setMediaList(prev => prev.filter(m => m.id !== item.id));
+                showNotification('Media item removed.');
             } else {
-                alert(data.message || 'Failed to delete');
+                alert(data.message || 'Failed to delete media');
             }
         } catch (err) {
-            console.error('Delete error:', err);
-            alert('Error connecting to backend server.');
+            console.error('Delete media error:', err);
+            alert('Error deleting media from server.');
         }
     };
 
-    const startEditing = (item) => {
-        setEditingId(item.id);
-        setEditFormData({ title: item.title, category: item.category });
-    };
-
-    const saveEdit = async (id) => {
+    const handleUpdateMedia = async (e) => {
+        e.preventDefault();
+        if (!editingMedia) return;
         try {
-            const res = await fetch(`${API_BASE_URL}/media/${id}`, {
+            const res = await fetch(`${API_BASE_URL}/media/${editingMedia.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(editFormData)
+                body: JSON.stringify(editingMedia)
             });
             const data = await res.json();
             if (data.success) {
-                setMediaList(prev =>
-                    prev.map(item =>
-                        item.id === id ? { ...item, title: editFormData.title, category: editFormData.category } : item
-                    )
-                );
-                setEditingId(null);
-                showNotification('Item metadata updated successfully.');
+                setMediaList(prev => prev.map(m => m.id === editingMedia.id ? data.data : m));
+                setEditingMedia(null);
+                showNotification('Media updated successfully!');
             } else {
-                alert(data.message || 'Failed to update');
+                alert(data.message || 'Failed to update media');
             }
         } catch (err) {
-            console.error('Edit error:', err);
-            alert('Error updating item on backend server.');
+            alert('Error updating media');
         }
     };
 
-    // --- SERVICE CREATE, SAVE & DELETE HANDLERS ---
+    // -------------------------------------------------------------
+    // SERVICES & COURSES HANDLERS
+    // -------------------------------------------------------------
     const handleCreateService = async (e) => {
         e.preventDefault();
         if (!newService.title) {
@@ -384,14 +376,15 @@ const MediaManager = ({ onLogout }) => {
             const features = (newService.featuresStr || '')
                 .split('\n')
                 .map(s => s.trim())
-                .filter(s => s.length > 0);
+                .filter(Boolean);
 
             const payload = {
-                title: newService.title.trim(),
-                price: newService.price ? newService.price.trim() : '₹25,000',
-                image: newService.image ? newService.image.trim() : 'https://images.unsplash.com/photo-1597157639073-69284dc0fdaf?q=80&w=1174&auto=format&fit=crop',
-                description: newService.description ? newService.description.trim() : '',
-                features: features.length > 0 ? features : ['Precision Acoustic Tuning', 'Tour-Grade Wireless Sound', 'Ambient Staging & Lighting']
+                title: newService.title,
+                category: newService.category || 'DJ Events',
+                price: newService.price || '₹25,000',
+                image: newService.image || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=600',
+                description: newService.description || '',
+                features: features.length > 0 ? features : ['Live Performance', 'High-End Audio Setup']
             };
 
             const res = await fetch(`${API_BASE_URL}/services`, {
@@ -405,10 +398,11 @@ const MediaManager = ({ onLogout }) => {
                 setIsAddingService(false);
                 setNewService({
                     title: '',
+                    category: 'DJ Events',
                     price: '₹25,000',
                     image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=600',
-                    description: 'Electrifying live sound and DJ performance designed for memorable celebrations.',
-                    featuresStr: 'Live Stem Remixing\nFestival-Grade Sound Array\nSynchronized Visuals'
+                    description: 'Electrifying DJ and live remix performance designed to keep the crowd energetic and dance floors packed all night.',
+                    featuresStr: 'Live Stem Remixing\nFestival-Grade Sound Array\nSynchronized Visuals\nDedicated Sound Tech'
                 });
                 showNotification(`Service "${data.data.title}" added & published live!`);
             } else {
@@ -451,9 +445,7 @@ const MediaManager = ({ onLogout }) => {
     const handleDeleteService = async (service) => {
         if (!window.confirm(`Are you sure you want to delete the service "${service.title}"?`)) return;
         try {
-            const res = await fetch(`${API_BASE_URL}/services/${service.id}`, {
-                method: 'DELETE'
-            });
+            const res = await fetch(`${API_BASE_URL}/services/${service.id}`, { method: 'DELETE' });
             const data = await res.json();
             if (data.success) {
                 setServices(prev => prev.filter(s => s.id !== service.id));
@@ -463,12 +455,12 @@ const MediaManager = ({ onLogout }) => {
             }
         } catch (err) {
             console.error('Delete service error:', err);
-            alert('Error deleting service from backend server.');
+            alert('Error deleting service.');
         }
     };
 
     const handleResetServices = async () => {
-        if (!window.confirm('Reset all signature DJ services to default prices and descriptions?')) return;
+        if (!window.confirm('Reset all signature DJ, Studio & Academy services to defaults?')) return;
         try {
             const res = await fetch(`${API_BASE_URL}/services/reset`, { method: 'POST' });
             const data = await res.json();
@@ -481,7 +473,9 @@ const MediaManager = ({ onLogout }) => {
         }
     };
 
-    // --- PRICING PLAN CREATE, SAVE & DELETE HANDLERS ---
+    // -------------------------------------------------------------
+    // PRICING PLANS HANDLERS
+    // -------------------------------------------------------------
     const handleCreatePlan = async (e) => {
         e.preventDefault();
         if (!newPlan.name) {
@@ -490,7 +484,7 @@ const MediaManager = ({ onLogout }) => {
         }
         setIsSavingPlan(true);
         try {
-            const planPrice = (newPlan.price || newPlan.monthlyPrice || '$499').trim();
+            const planPrice = (newPlan.price || newPlan.monthlyPrice || '₹25,000').trim();
             const validVideos = (newPlan.videos || []).filter(Boolean);
             const payload = {
                 ...newPlan,
@@ -511,8 +505,8 @@ const MediaManager = ({ onLogout }) => {
                 setNewPlan({
                     name: '',
                     badge: 'SPECIAL TIER',
-                    price: '$499',
-                    monthlyPrice: '$499',
+                    price: '₹25,000',
+                    monthlyPrice: '₹25,000',
                     period: '/ event',
                     buttonText: 'Choose Plan',
                     theme: 'standard',
@@ -562,7 +556,7 @@ const MediaManager = ({ onLogout }) => {
             }
         } catch (err) {
             console.error('Plan update error:', err);
-            alert('Error saving pricing plan to backend server.');
+            alert('Error saving pricing plan.');
         } finally {
             setIsSavingPlan(false);
         }
@@ -572,9 +566,7 @@ const MediaManager = ({ onLogout }) => {
         const planId = plan.id || plan.name;
         if (!window.confirm(`Are you sure you want to delete the pricing plan "${plan.name}"?`)) return;
         try {
-            const res = await fetch(`${API_BASE_URL}/plans/${planId}`, {
-                method: 'DELETE'
-            });
+            const res = await fetch(`${API_BASE_URL}/plans/${planId}`, { method: 'DELETE' });
             const data = await res.json();
             if (data.success) {
                 setPlans(prev => prev.filter(p => (p.id !== plan.id && p.name !== plan.name)));
@@ -584,12 +576,12 @@ const MediaManager = ({ onLogout }) => {
             }
         } catch (err) {
             console.error('Delete plan error:', err);
-            alert('Error deleting plan from backend server.');
+            alert('Error deleting plan.');
         }
     };
 
     const handleResetPlans = async () => {
-        if (!window.confirm('Reset all event pricing plans to default prices and features?')) return;
+        if (!window.confirm('Reset all event pricing plans to defaults?')) return;
         try {
             const res = await fetch(`${API_BASE_URL}/plans/reset`, { method: 'POST' });
             const data = await res.json();
@@ -598,815 +590,748 @@ const MediaManager = ({ onLogout }) => {
                 showNotification('All pricing plans reset to defaults!');
             }
         } catch (err) {
-            alert('Failed to reset pricing plans');
+            alert('Failed to reset plans');
         }
     };
 
-    const filteredMedia = filterCategory === 'All'
-        ? mediaList
-        : filterCategory === 'Others'
-            ? mediaList.filter(item => !DEFAULT_CATEGORIES.some(dc => dc.toLowerCase() === (item.category || '').toLowerCase()))
-            : mediaList.filter(item => item.category?.toLowerCase() === filterCategory.toLowerCase());
+    // -------------------------------------------------------------
+    // INQUIRIES HANDLERS
+    // -------------------------------------------------------------
+    const handleDeleteInquiry = async (id) => {
+        if (!window.confirm('Are you sure you want to remove this inquiry?')) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/inquiries/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                setInquiries(prev => prev.filter(i => i.id !== id));
+                showNotification('Inquiry removed.');
+            }
+        } catch (err) {
+            alert('Failed to delete inquiry');
+        }
+    };
 
-    const getAcceptType = () => {
-        if (formData.type === 'image') return 'image/*';
-        if (formData.type === 'video') return 'video/*';
-        return 'image/*,video/*';
+    // -------------------------------------------------------------
+    // FILTERED LISTS
+    // -------------------------------------------------------------
+    const filteredMedia = mediaList.filter(item => {
+        const matchCat = filterCategory === 'All' || item.category === filterCategory;
+        const matchSearch = !searchQuery || (item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())) || (item.category && item.category.toLowerCase().includes(searchQuery.toLowerCase()));
+        const isImg = isImageMedia(item.url || item.key);
+        const matchType = mediaTypeFilter === 'all'
+            ? true
+            : mediaTypeFilter === 'image' ? isImg : !isImg;
+        return matchCat && matchSearch && matchType;
+    });
+
+    const filteredServices = services.filter(service => {
+        if (serviceCategoryFilter === 'All') return true;
+        if (serviceCategoryFilter === 'DJ Events') return !service.category || service.category === 'DJ Events' || service.category === 'Audios&Lightings';
+        if (serviceCategoryFilter === 'Raga Studio') return service.category === 'Raga Studio';
+        if (serviceCategoryFilter === 'Sampoorna Academy') return service.category === 'Sampoorna Academy';
+        return service.category === serviceCategoryFilter;
+    });
+
+    // Stats calculations
+    const stats = {
+        totalMedia: mediaList.length,
+        totalServices: services.length,
+        totalPlans: plans.length,
+        totalInquiries: inquiries.length
     };
 
     return (
-        <div className="min-h-screen bg-[#141010] text-white font-sans p-4 sm:p-8">
-            <div className="max-w-6xl mx-auto">
+        <div className="min-h-screen bg-[#0E0C0C] text-gray-100 flex flex-col font-sans pb-24 md:pb-10 selection:bg-[#f70776] selection:text-white">
+            {/* Custom Background Glow */}
+            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+                <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#f70776]/10 rounded-full blur-[140px] transform -translate-y-1/2"></div>
+                <div className="absolute bottom-1/3 right-10 w-[450px] h-[450px] bg-[#FF8A00]/10 rounded-full blur-[140px]"></div>
+                <div className="absolute top-1/2 left-10 w-[300px] h-[300px] bg-[#6366F1]/10 rounded-full blur-[120px]"></div>
+            </div>
 
-                {/* Toast Notification */}
-                {notification && (
-                    <div className="fixed top-6 right-6 z-50 bg-[#f70776] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 border border-white/20 animate-bounce">
-                        <span className="text-lg">✨</span>
-                        <span className="text-xs font-bold">{notification.msg}</span>
+            {/* FLOATING TOAST NOTIFICATION */}
+            {notification && (
+                <div className="fixed top-5 right-5 z-[200] max-w-sm w-full animate-bounce">
+                    <div className="bg-[#1C1717] border border-[#f70776] text-white p-4 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md">
+                        <span className="text-xl">✨</span>
+                        <p className="text-xs font-semibold flex-1">{notification.msg}</p>
+                        <button onClick={() => setNotification(null)} className="text-gray-400 hover:text-white text-sm font-bold">✕</button>
                     </div>
-                )}
+                </div>
+            )}
 
-                {/* Top Header */}
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 border-b border-[#c3195d]/30 pb-4 gap-4">
-                    <div>
-                        <div className="flex items-center space-x-3">
+            {/* TOP HEADER */}
+            <header className="sticky top-0 z-40 bg-[#120F0F]/90 backdrop-blur-xl border-b border-[#241C1C]">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+                    {/* Brand */}
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center">
                             <img
                                 src="/SS.svg"
                                 alt="SS Audios"
-                                className="h-8 sm:h-9 w-auto object-contain drop-shadow-[0_0_15px_rgba(247,7,118,0.7)]"
+                                className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_0_12px_rgba(247,7,118,0.7)]"
                             />
-                            <div className="h-6 w-px bg-neutral-700 hidden sm:block" />
-                            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-wide">
-                                Admin <span className="text-[#f70776]">Studio</span>
-                            </h1>
-                            {serverStatus === 'connected' && (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-500/20 text-green-400 border border-green-500/30">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                                    Backend Connected
-                                </span>
-                            )}
-                            {serverStatus === 'offline' && (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                                    Backend Offline
-                                </span>
-                            )}
                         </div>
-                        <p className="text-gray-400 text-xs sm:text-sm mt-1">
-                            Live event management, DJ services, custom pricing tiers, and media vault sync.
-                        </p>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h1 className="text-sm sm:text-base font-black tracking-wider uppercase text-white">
+                                    SS AUDIOS & DJ EVENTS
+                                </h1>
+                                <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-widest bg-[#f70776]/20 text-[#f70776] border border-[#f70776]/40 rounded-full">
+                                    Admin Studio
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <span className={`w-2 h-2 rounded-full ${serverStatus === 'online' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></span>
+                                <span className="text-[11px] text-gray-400 font-medium">
+                                    {serverStatus === 'online' ? 'Cloud Synced' : 'Ready (Local Cache)'}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
-                        <div className="flex flex-wrap gap-1 bg-[#1C1717] p-1 border border-[#c3195d]/30 rounded-xl">
-                            <button
-                                onClick={() => setActiveTab('gallery')}
-                                className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'gallery'
-                                    ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/30'
-                                    : 'text-gray-400 hover:text-white'
-                                    }`}
-                            >
-                                Gallery ({mediaList.length})
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('add')}
-                                className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'add'
-                                    ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/30'
-                                    : 'text-gray-400 hover:text-white'
-                                    }`}
-                            >
-                                + Upload
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('services')}
-                                className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'services'
-                                    ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/30'
-                                    : 'text-gray-400 hover:text-white'
-                                    }`}
-                            >
-                                Services & DJ Rates ({services.length})
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('plans')}
-                                className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'plans'
-                                    ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/30'
-                                    : 'text-gray-400 hover:text-white'
-                                    }`}
-                            >
-                                Pricing Plans ({plans.length})
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('inquiries')}
-                                className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${activeTab === 'inquiries'
-                                    ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/30'
-                                    : 'text-gray-400 hover:text-white'
-                                    }`}
-                            >
-                                <span>📥 Inquiries</span>
-                                {inquiries.length > 0 && (
-                                    <span className="bg-[#f70776]/40 text-white text-[10px] px-2 py-0.5 rounded-full font-black">
-                                        {inquiries.length}
-                                    </span>
-                                )}
-                            </button>
+                    {/* Actions & Profile */}
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        <a
+                            href="http://localhost:5173/"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-gray-300 hover:text-white border border-white/10 transition-all"
+                        >
+                            <span>🌐</span> Live Client Site ↗
+                        </a>
+
+                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1C1717] border border-[#2B2323]">
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#f70776] to-[#c3195d] flex items-center justify-center text-[10px] font-bold text-white">
+                                SS
+                            </div>
+                            <span className="text-xs font-semibold text-gray-300">ssaudios25</span>
                         </div>
 
-                        {onLogout && (
-                            <button
-                                onClick={onLogout}
-                                className="px-3 py-2 text-xs font-semibold text-gray-400 hover:text-red-400 border border-gray-800 hover:border-red-500/40 rounded-xl transition-colors"
-                                title="Sign out of admin session"
-                            >
-                                Logout
-                            </button>
-                        )}
+                        <button
+                            onClick={onLogout}
+                            className="px-3.5 py-2 rounded-xl bg-red-950/40 hover:bg-red-900/60 border border-red-500/40 text-red-300 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                            <span>🚪</span> Logout
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            {/* MAIN CONTENT AREA */}
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full flex-1 z-10">
+                {/* DASHBOARD STATS ROW */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-6 sm:mb-8">
+                    <div
+                        onClick={() => setActiveTab('gallery')}
+                        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer ${activeTab === 'gallery' ? 'bg-[#1C1717] border-[#f70776]/60 shadow-lg shadow-[#f70776]/10' : 'bg-[#161313] border-[#261E1E] hover:border-[#f70776]/30'}`}
+                    >
+                        <div className="flex items-center justify-between">
+                            <span className="text-2xl sm:text-3xl">📸</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Media Vault</span>
+                        </div>
+                        <div className="mt-3">
+                            <span className="text-2xl sm:text-3xl font-black text-white">{stats.totalMedia}</span>
+                            <p className="text-[11px] text-gray-400 mt-0.5">Photos & Videos in Gallery</p>
+                        </div>
+                    </div>
+
+                    <div
+                        onClick={() => setActiveTab('services')}
+                        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer ${activeTab === 'services' ? 'bg-[#1C1717] border-[#f70776]/60 shadow-lg shadow-[#f70776]/10' : 'bg-[#161313] border-[#261E1E] hover:border-[#f70776]/30'}`}
+                    >
+                        <div className="flex items-center justify-between">
+                            <span className="text-2xl sm:text-3xl">🎛️</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Services & Courses</span>
+                        </div>
+                        <div className="mt-3">
+                            <span className="text-2xl sm:text-3xl font-black text-white">{stats.totalServices}</span>
+                            <p className="text-[11px] text-gray-400 mt-0.5">DJ, Studio & Academy Offerings</p>
+                        </div>
+                    </div>
+
+                    <div
+                        onClick={() => setActiveTab('plans')}
+                        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer ${activeTab === 'plans' ? 'bg-[#1C1717] border-[#f70776]/60 shadow-lg shadow-[#f70776]/10' : 'bg-[#161313] border-[#261E1E] hover:border-[#f70776]/30'}`}
+                    >
+                        <div className="flex items-center justify-between">
+                            <span className="text-2xl sm:text-3xl">⚡</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Event Tiers</span>
+                        </div>
+                        <div className="mt-3">
+                            <span className="text-2xl sm:text-3xl font-black text-white">{stats.totalPlans}</span>
+                            <p className="text-[11px] text-gray-400 mt-0.5">Custom Pricing Packages</p>
+                        </div>
+                    </div>
+
+                    <div
+                        onClick={() => setActiveTab('inquiries')}
+                        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer ${activeTab === 'inquiries' ? 'bg-[#1C1717] border-[#f70776]/60 shadow-lg shadow-[#f70776]/10' : 'bg-[#161313] border-[#261E1E] hover:border-[#f70776]/30'}`}
+                    >
+                        <div className="flex items-center justify-between">
+                            <span className="text-2xl sm:text-3xl">📬</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Client Inquiries</span>
+                        </div>
+                        <div className="mt-3">
+                            <span className="text-2xl sm:text-3xl font-black text-white">{stats.totalInquiries}</span>
+                            <p className="text-[11px] text-gray-400 mt-0.5">Direct Booking Requests</p>
+                        </div>
                     </div>
                 </div>
 
-                {/* TAB 1: GALLERY & ASSET MANAGER */}
+                {/* DESKTOP / TABLET SEGMENTED TAB BAR */}
+                <div className="flex items-center gap-2 p-1.5 bg-[#141010] border border-[#261E1E] rounded-2xl mb-6 overflow-x-auto scrollbar-none">
+                    <button
+                        onClick={() => setActiveTab('gallery')}
+                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'gallery' ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                        <span>📸</span> Gallery & Media
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('add')}
+                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'add' ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                        <span>🚀</span> Quick Upload
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('services')}
+                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'services' ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                        <span>🎛️</span> Services & Academy ({services.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('plans')}
+                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'plans' ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                        <span>🎚️</span> Pricing Packages ({plans.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('inquiries')}
+                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'inquiries' ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                        <span>📬</span> Inquiries ({inquiries.length})
+                    </button>
+                </div>
+
+                {/* ------------------------------------------------------------- */}
+                {/* TAB 1: GALLERY & MEDIA VAULT */}
+                {/* ------------------------------------------------------------- */}
                 {activeTab === 'gallery' && (
-                    <div>
-                        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-                            <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-thin">
-                                <span className="text-xs text-gray-400 mr-2 font-semibold shrink-0">Filter:</span>
-                                {['All', ...DEFAULT_CATEGORIES, 'Others'].map((cat) => (
-                                    <button
-                                        key={cat}
-                                        onClick={() => setFilterCategory(cat)}
-                                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all shrink-0 cursor-pointer ${filterCategory.toLowerCase() === cat.toLowerCase()
-                                            ? 'bg-[#c3195d]/20 border-[#f70776] text-[#f70776]'
-                                            : 'border-gray-800 text-gray-400 hover:border-gray-600 hover:text-white'
-                                            }`}
-                                    >
-                                        {cat}
-                                    </button>
-                                ))}
-                            </div>
-
-                            <button
-                                onClick={fetchMedia}
-                                className="text-xs text-gray-400 hover:text-[#f70776] flex items-center space-x-1"
-                                title="Refresh list"
-                            >
-                                <span>↻</span>
-                                <span>Refresh</span>
-                            </button>
-                        </div>
-
-                        {isLoading ? (
-                            <div className="text-center py-20 bg-[#141010] border border-[#c3195d]/20 rounded-2xl">
-                                <div className="w-8 h-8 border-2 border-[#f70776] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                                <p className="text-gray-400 text-xs">Loading media vault from server...</p>
-                            </div>
-                        ) : filteredMedia.length === 0 ? (
-                            <div className="text-center py-16 bg-[#141010] border border-[#c3195d]/20 rounded-2xl">
-                                <p className="text-gray-400 text-sm">No assets found in this category.</p>
-                                <button
-                                    onClick={() => setActiveTab('add')}
-                                    className="mt-4 px-4 py-2 bg-[#f70776] text-white text-xs font-bold rounded-lg hover:bg-[#c3195d] transition-colors"
-                                >
-                                    Upload First Asset
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                                {filteredMedia.map((item) => (
-                                    <div
-                                        key={item.id}
-                                        className="bg-[#1C1717] border border-[#2B2323] hover:border-[#f70776]/50 rounded-2xl overflow-hidden shadow-lg transition-all duration-300 flex flex-col justify-between group"
-                                    >
-                                        {/* Media Preview Frame */}
-                                        <div className="relative aspect-video bg-black/50 overflow-hidden flex items-center justify-center">
-                                            {item.type === 'video' ? (
-                                                <video
-                                                    src={item.url}
-                                                    className="w-full h-full object-cover"
-                                                    muted
-                                                    loop
-                                                    onMouseOver={e => e.target.play().catch(() => { })}
-                                                    onMouseOut={e => e.target.pause()}
-                                                />
-                                            ) : item.type === 'audio' ? (
-                                                <div className="flex flex-col items-center justify-center p-4 text-center">
-                                                    <div className="w-12 h-12 rounded-full bg-[#f70776]/20 text-[#f70776] flex items-center justify-center mb-2">
-                                                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                                                        </svg>
-                                                    </div>
-                                                    <audio src={item.url} controls className="w-full h-8 scale-90" />
-                                                </div>
-                                            ) : (
-                                                <img
-                                                    src={item.url}
-                                                    alt={item.title}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                                />
-                                            )}
-
-                                            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-black/70 backdrop-blur-md text-white border border-white/10">
-                                                {item.type}
-                                            </span>
-                                        </div>
-
-                                        {/* Details and Actions */}
-                                        <div className="p-4 flex-1 flex flex-col justify-between">
-                                            {editingId === item.id ? (
-                                                <div className="space-y-2 mb-3">
-                                                    <input
-                                                        type="text"
-                                                        value={editFormData.title}
-                                                        onChange={e => setEditFormData({ ...editFormData, title: e.target.value })}
-                                                        className="w-full px-2 py-1 bg-black/60 border border-gray-700 rounded text-xs text-white"
-                                                        placeholder="Asset title"
-                                                    />
-                                                    <select
-                                                        value={editFormData.category}
-                                                        onChange={e => setEditFormData({ ...editFormData, category: e.target.value })}
-                                                        className="w-full px-2 py-1 bg-black/60 border border-gray-700 rounded text-xs text-white"
-                                                    >
-                                                        <option value="Ambient">Ambient</option>
-                                                        <option value="Stage">Stage</option>
-                                                        <option value="Club">Club</option>
-                                                        <option value="Festival">Festival</option>
-                                                        <option value="Orchestra">Orchestra</option>
-                                                        <option value="Weddings">Weddings</option>
-                                                    </select>
-                                                </div>
-                                            ) : (
-                                                <div className="mb-3">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#f70776]">
-                                                        {item.category || 'General'}
-                                                    </span>
-                                                    <h3 className="text-sm font-bold text-white truncate" title={item.title}>
-                                                        {item.title}
-                                                    </h3>
-                                                </div>
-                                            )}
-
-                                            {/* Action Buttons */}
-                                            <div className="flex items-center justify-between pt-3 border-t border-gray-800">
-                                                {editingId === item.id ? (
-                                                    <div className="flex space-x-2 w-full">
-                                                        <button
-                                                            onClick={() => saveEdit(item.id)}
-                                                            className="flex-1 py-1 bg-[#f70776] text-white text-xs font-bold rounded hover:bg-[#c3195d]"
-                                                        >
-                                                            Save
-                                                        </button>
-                                                        <button
-                                                            onClick={() => setEditingId(null)}
-                                                            className="px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded hover:bg-gray-700"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <>
-                                                        <button
-                                                            onClick={() => startEditing(item)}
-                                                            className="text-xs text-gray-400 hover:text-white flex items-center space-x-1"
-                                                        >
-                                                            <span>✏️</span>
-                                                            <span>Edit</span>
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDelete(item.id)}
-                                                            className="text-xs text-red-400 hover:text-red-300 flex items-center space-x-1"
-                                                        >
-                                                            <span>🗑️</span>
-                                                            <span>Delete</span>
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* TAB 2: DIRECT FILE UPLOAD FORM */}
-                {activeTab === 'add' && (
-                    <div className="max-w-2xl mx-auto bg-[#1C1717] border border-[#c3195d]/30 p-6 sm:p-8 rounded-2xl shadow-xl">
-                        <div className="flex items-center justify-between mb-6 border-b border-gray-800 pb-3">
-                            <h2 className="text-xl font-bold text-white">
-                                Upload Asset to your Gallery
-                            </h2>
-                        </div>
-
-                        {uploadError && (
-                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-xs rounded-xl">
-                                {uploadError}
-                            </div>
-                        )}
-
-                        <form onSubmit={handleAddMedia} className="space-y-5">
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-300 mb-2">Asset Title</label>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    placeholder="e.g. Club Night Visual Backdrop"
-                                    value={formData.title}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-3 bg-black/40 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#f70776] transition-colors"
-                                    required
-                                    disabled={isUploading}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-300 mb-2">Category</label>
-                                    <select
-                                        name="category"
-                                        value={formData.category}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 bg-black/40 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776] transition-colors"
-                                        disabled={isUploading}
-                                    >
-                                        {DEFAULT_CATEGORIES.map(c => (
-                                            <option key={c} value={c}>{c}</option>
-                                        ))}
-                                        <option value="Others">Others / Custom Category</option>
-                                    </select>
-                                    {formData.category === 'Others' && (
-                                        <div className="mt-2">
-                                            <input
-                                                type="text"
-                                                name="customCategory"
-                                                value={formData.customCategory}
-                                                onChange={handleInputChange}
-                                                placeholder="Enter custom category name..."
-                                                className="w-full px-3 py-2 bg-black/60 border border-[#f70776]/50 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#f70776]"
-                                                required
-                                            />
-                                        </div>
+                    <div className="space-y-6">
+                        {/* Control bar: Search + Category filter + Type filter */}
+                        <div className="bg-[#161313] p-4 sm:p-5 rounded-3xl border border-[#261E1E] space-y-4">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                                {/* Search */}
+                                <div className="relative flex-1">
+                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Search media by title or tag..."
+                                        className="w-full pl-10 pr-4 py-2.5 bg-[#0E0C0C] border border-[#2B2323] rounded-2xl text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#f70776]"
+                                    />
+                                    {searchQuery && (
+                                        <button
+                                            onClick={() => setSearchQuery('')}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs"
+                                        >
+                                            ✕
+                                        </button>
                                     )}
                                 </div>
 
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-300 mb-2">Media Type</label>
-                                    <select
-                                        name="type"
-                                        value={formData.type}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 bg-black/40 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776] transition-colors"
-                                        disabled={isUploading}
+                                {/* Media Type Filter (All / Images / Videos) */}
+                                <div className="flex items-center gap-1 bg-[#0E0C0C] p-1 border border-[#2B2323] rounded-2xl shrink-0">
+                                    <button
+                                        onClick={() => setMediaTypeFilter('all')}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${mediaTypeFilter === 'all' ? 'bg-[#f70776] text-white' : 'text-gray-400 hover:text-white'}`}
                                     >
-                                        <option value="image">Photo / Image</option>
-                                        <option value="video">Video Clip</option>
-                                    </select>
+                                        All
+                                    </button>
+                                    <button
+                                        onClick={() => setMediaTypeFilter('image')}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${mediaTypeFilter === 'image' ? 'bg-[#f70776] text-white' : 'text-gray-400 hover:text-white'}`}
+                                    >
+                                        🖼️ Images
+                                    </button>
+                                    <button
+                                        onClick={() => setMediaTypeFilter('video')}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${mediaTypeFilter === 'video' ? 'bg-[#f70776] text-white' : 'text-gray-400 hover:text-white'}`}
+                                    >
+                                        🎬 Videos
+                                    </button>
                                 </div>
+
+                                <button
+                                    onClick={fetchMedia}
+                                    className="px-4 py-2.5 bg-[#1C1717] hover:bg-[#251F1F] border border-[#2B2323] rounded-2xl text-xs font-semibold text-gray-300 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                                >
+                                    <span>↻</span> Refresh
+                                </button>
                             </div>
 
-                            {/* Direct File Selector */}
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-300 mb-2">
-                                    Choose File from Device
-                                </label>
-                                <div className="border-2 border-dashed border-gray-700 hover:border-[#f70776] rounded-xl p-6 text-center transition-colors bg-black/20">
-                                    <input
-                                        type="file"
-                                        accept={getAcceptType()}
-                                        onChange={handleFileChange}
-                                        className="hidden"
-                                        id="file-upload-input"
-                                        disabled={isUploading}
-                                        required
-                                    />
-                                    <label
-                                        htmlFor="file-upload-input"
-                                        className="cursor-pointer flex flex-col items-center justify-center space-y-2"
-                                    >
-                                        <div className="p-3 bg-[#f70776]/10 rounded-full text-[#f70776]">
-                                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                            </svg>
+                            {/* Category Filter Pills */}
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                                <button
+                                    onClick={() => setFilterCategory('All')}
+                                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${filterCategory === 'All' ? 'bg-[#f70776] text-white shadow-md shadow-[#f70776]/20' : 'bg-[#0E0C0C] text-gray-400 hover:text-white border border-[#2B2323]'}`}
+                                >
+                                    All Categories ({mediaList.length})
+                                </button>
+                                {DEFAULT_CATEGORIES.map((cat, idx) => {
+                                    const count = mediaList.filter(m => m.category === cat).length;
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setFilterCategory(cat)}
+                                            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${filterCategory === cat ? 'bg-[#f70776] text-white shadow-md shadow-[#f70776]/20' : 'bg-[#0E0C0C] text-gray-400 hover:text-white border border-[#2B2323]'}`}
+                                        >
+                                            {cat} {count > 0 && `(${count})`}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Gallery Media Grid */}
+                        {isLoading ? (
+                            <div className="py-20 flex flex-col items-center justify-center gap-3">
+                                <div className="w-10 h-10 border-4 border-[#f70776] border-t-transparent rounded-full animate-spin"></div>
+                                <p className="text-xs text-gray-400 font-semibold">Loading media assets...</p>
+                            </div>
+                        ) : filteredMedia.length === 0 ? (
+                            <div className="bg-[#161313] border border-[#261E1E] rounded-3xl p-12 text-center space-y-3">
+                                <span className="text-4xl">📂</span>
+                                <h3 className="text-base font-bold text-white">No media found in this category</h3>
+                                <p className="text-xs text-gray-400 max-w-sm mx-auto">
+                                    Upload photos and videos for this category or select "All Categories".
+                                </p>
+                                <button
+                                    onClick={() => setActiveTab('add')}
+                                    className="px-5 py-2.5 bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold rounded-xl shadow-lg transition-all cursor-pointer"
+                                >
+                                    + Upload Media Now
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+                                {filteredMedia.map((item) => {
+                                    const isImg = isImageMedia(item.url || item.key);
+                                    return (
+                                        <div
+                                            key={item.id || item.key}
+                                            className="group bg-[#161313] rounded-2xl sm:rounded-3xl border border-[#261E1E] hover:border-[#f70776]/50 overflow-hidden shadow-lg transition-all flex flex-col justify-between"
+                                        >
+                                            {/* Media Box */}
+                                            <div
+                                                onClick={() => setPreviewMediaModal(item)}
+                                                className="relative aspect-video sm:aspect-square bg-black overflow-hidden cursor-pointer"
+                                            >
+                                                {isImg ? (
+                                                    <img
+                                                        src={item.url}
+                                                        alt={item.title || 'Gallery item'}
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                        loading="lazy"
+                                                    />
+                                                ) : (
+                                                    <video
+                                                        src={item.url}
+                                                        className="w-full h-full object-cover"
+                                                        muted
+                                                        loop
+                                                        playsInline
+                                                        onMouseEnter={(e) => e.target.play().catch(() => { })}
+                                                        onMouseLeave={(e) => e.target.pause()}
+                                                    />
+                                                )}
+
+                                                {/* Top Badges */}
+                                                <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                                                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider ${isImg ? 'bg-cyan-950/90 text-cyan-300 border border-cyan-500/40' : 'bg-pink-950/90 text-pink-300 border border-pink-500/40'}`}>
+                                                        {isImg ? 'IMAGE' : 'VIDEO'}
+                                                    </span>
+                                                </div>
+
+                                                <div className="absolute top-2 right-2">
+                                                    <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-black/80 text-gray-300 border border-white/10 backdrop-blur-sm">
+                                                        {item.category || 'General'}
+                                                    </span>
+                                                </div>
+
+                                                {/* Hover Overlay preview indicator */}
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <span className="px-3 py-1 bg-black/70 border border-white/20 rounded-xl text-xs font-semibold text-white">
+                                                        🔍 Preview
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Details & Actions */}
+                                            <div className="p-3.5 space-y-2">
+                                                <h4 className="text-xs font-bold text-white truncate">
+                                                    {item.title || 'Untitled Asset'}
+                                                </h4>
+
+                                                <div className="flex items-center justify-between pt-2 border-t border-[#261E1E]">
+                                                    <button
+                                                        onClick={() => setEditingMedia(item)}
+                                                        className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-lg text-[11px] font-semibold transition-all cursor-pointer"
+                                                    >
+                                                        ✏️ Edit Tag
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteMedia(item)}
+                                                        className="px-2.5 py-1 bg-red-950/40 hover:bg-red-900/60 text-red-300 rounded-lg text-[11px] font-semibold transition-all cursor-pointer"
+                                                    >
+                                                        🗑️ Delete
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <span className="text-xs font-bold text-white">
-                                            {formData.selectedFile ? formData.selectedFile.name : 'Click to select file'}
-                                        </span>
-                                        <span className="text-[10px] text-gray-400">
-                                            {formData.selectedFile
-                                                ? `${(formData.selectedFile.size / (1024 * 1024)).toFixed(2)} MB`
-                                                : `Select a ${formData.type} from local storage`}
-                                        </span>
-                                    </label>
-                                </div>
+                                    );
+                                })}
                             </div>
-
-                            <button
-                                type="submit"
-                                disabled={!formData.selectedFile || isUploading}
-                                className="w-full py-3.5 bg-[#f70776] hover:bg-[#c3195d] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm rounded-xl shadow-lg shadow-[#f70776]/20 transition-all duration-200 mt-4 flex items-center justify-center space-x-2"
-                            >
-                                {isUploading ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                        <span>Uploading to Server...</span>
-                                    </>
-                                ) : (
-                                    <span>Upload & Sync to SS Audios</span>
-                                )}
-                            </button>
-                        </form>
+                        )}
                     </div>
                 )}
 
-                {/* TAB 3: SERVICES & DJ PRICING MANAGER */}
-                {activeTab === 'services' && (
-                    <div className="space-y-6">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#1C1717] p-5 rounded-2xl border border-[#2B2323]">
+                {/* ------------------------------------------------------------- */}
+                {/* TAB 2: DIRECT UPLOAD & MEDIA PUBLISHER */}
+                {/* ------------------------------------------------------------- */}
+                {activeTab === 'add' && (
+                    <div className="max-w-2xl mx-auto">
+                        <div className="bg-[#161313] border border-[#261E1E] rounded-3xl p-5 sm:p-8 space-y-6 shadow-2xl">
                             <div>
-                                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <span>🎧</span> Manage Signature Services & DJ Rates
+                                <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                                    <span>🚀</span> Direct Media Publisher
                                 </h2>
                                 <p className="text-gray-400 text-xs mt-1">
-                                    Add, edit, or remove showcase event cards, starting rates, descriptions, and feature capabilities.
+                                    Upload event photos, stage lighting videos, or link high-resolution showcase URLs to the live client gallery.
                                 </p>
                             </div>
-                            <div className="flex flex-wrap items-center gap-3">
+
+                            <form onSubmit={handleDirectUploadSubmit} className="space-y-5">
+                                {/* Drag & Drop or Browse Box */}
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-300 mb-2 uppercase tracking-wider">
+                                        Select Media File
+                                    </label>
+                                    <label className="border-2 border-dashed border-[#2B2323] hover:border-[#f70776] rounded-3xl p-6 sm:p-10 flex flex-col items-center justify-center cursor-pointer transition-all bg-[#0E0C0C]/60 hover:bg-[#0E0C0C] group">
+                                        <input
+                                            type="file"
+                                            accept="image/*,video/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    const isVid = file.type.startsWith('video');
+                                                    setUploadFormData(prev => ({
+                                                        ...prev,
+                                                        selectedFile: file,
+                                                        type: isVid ? 'video' : 'image',
+                                                        title: prev.title || file.name.replace(/\.[^/.]+$/, ''),
+                                                        filePreview: URL.createObjectURL(file)
+                                                    }));
+                                                }
+                                            }}
+                                        />
+                                        {uploadFormData.filePreview ? (
+                                            <div className="space-y-3 text-center">
+                                                <div className="w-32 h-32 rounded-2xl overflow-hidden mx-auto bg-black border border-white/20">
+                                                    {uploadFormData.type === 'video' ? (
+                                                        <video src={uploadFormData.filePreview} className="w-full h-full object-cover" muted autoPlay loop />
+                                                    ) : (
+                                                        <img src={uploadFormData.filePreview} alt="Preview" className="w-full h-full object-cover" />
+                                                    )}
+                                                </div>
+                                                <p className="text-xs font-bold text-[#f70776]">
+                                                    {uploadFormData.selectedFile?.name}
+                                                </p>
+                                                <span className="text-[10px] text-gray-400">Click to change file</span>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2 text-center">
+                                                <span className="text-3xl group-hover:scale-110 transition-transform inline-block">📁</span>
+                                                <p className="text-xs sm:text-sm font-bold text-gray-200">
+                                                    Drag & drop photo or video here, or <span className="text-[#f70776] underline">browse files</span>
+                                                </p>
+                                                <p className="text-[11px] text-gray-500">
+                                                    Supports JPG, PNG, WEBP, MP4, MOV (Up to 100MB)
+                                                </p>
+                                            </div>
+                                        )}
+                                    </label>
+                                </div>
+
+                                {/* OR Direct Media URL Input */}
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-300 mb-1 uppercase tracking-wider">
+                                        Or External Media URL
+                                    </label>
+                                    <input
+                                        type="url"
+                                        value={quickMediaUrlInput}
+                                        onChange={(e) => setQuickMediaUrlInput(e.target.value)}
+                                        placeholder="https://images.unsplash.com/... or https://assets.mixkit.co/..."
+                                        className="w-full px-3.5 py-2.5 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    />
+                                </div>
+
+                                {/* Title & Category Grid */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-300 mb-1">
+                                            Asset Title
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={uploadFormData.title}
+                                            onChange={(e) => setUploadFormData({ ...uploadFormData, title: e.target.value })}
+                                            placeholder="e.g. Royal Palace Wedding DJ Setup"
+                                            className="w-full px-3.5 py-2.5 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-300 mb-1">
+                                            Target Gallery Category
+                                        </label>
+                                        <select
+                                            value={uploadFormData.category}
+                                            onChange={(e) => setUploadFormData({ ...uploadFormData, category: e.target.value })}
+                                            className="w-full px-3.5 py-2.5 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        >
+                                            {DEFAULT_CATEGORIES.map((cat, i) => (
+                                                <option key={i} value={cat}>{cat}</option>
+                                            ))}
+                                            <option value="Custom">+ Custom Category</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {uploadFormData.category === 'Custom' && (
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-300 mb-1">
+                                            Custom Category Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={uploadFormData.customCategory}
+                                            onChange={(e) => setUploadFormData({ ...uploadFormData, customCategory: e.target.value })}
+                                            placeholder="e.g. Sangeet & Haldi Night"
+                                            className="w-full px-3.5 py-2.5 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                            required
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Progress Bar */}
+                                {isDirectUploading && (
+                                    <div className="space-y-1.5">
+                                        <div className="flex justify-between text-xs text-gray-400">
+                                            <span>Uploading asset to cloud vault...</span>
+                                            <span>{uploadProgress}%</span>
+                                        </div>
+                                        <div className="w-full h-2 bg-[#2B2323] rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-[#f70776] to-[#FF8A00] transition-all duration-300"
+                                                style={{ width: `${uploadProgress || 60}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Submit button */}
+                                <button
+                                    type="submit"
+                                    disabled={isDirectUploading}
+                                    className="w-full py-3.5 rounded-2xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-lg shadow-[#f70776]/25 transition-all disabled:opacity-50 cursor-pointer"
+                                >
+                                    {isDirectUploading ? 'Publishing Asset...' : 'Upload & Publish to Live Gallery'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* ------------------------------------------------------------- */}
+                {/* TAB 3: SERVICES, STUDIO & ACADEMY MANAGER */}
+                {/* ------------------------------------------------------------- */}
+                {activeTab === 'services' && (
+                    <div className="space-y-6">
+                        {/* Header Box */}
+                        <div className="bg-[#161313] p-4 sm:p-6 rounded-3xl border border-[#261E1E] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                                    <span>🎛️</span> Services, Studio & Academy Offerings
+                                </h2>
+                                <p className="text-gray-400 text-xs mt-1">
+                                    Manage DJ event packages, Raga Studio session modules, and Sampoorna Academy courses.
+                                </p>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
                                 <button
                                     onClick={() => setIsAddingService(true)}
-                                    className="px-4 py-2 rounded-xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all flex items-center gap-1.5 cursor-pointer"
+                                    className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                                 >
-                                    <span>+</span> Add New Service
+                                    <span>+</span> Add Offering
                                 </button>
                                 <button
                                     onClick={fetchServices}
-                                    className="px-3 py-2 rounded-xl border border-gray-700 text-gray-300 hover:text-white text-xs font-semibold cursor-pointer"
+                                    className="px-3.5 py-2.5 rounded-2xl bg-[#0E0C0C] border border-[#2B2323] text-gray-300 hover:text-white text-xs font-semibold cursor-pointer"
                                 >
                                     ↻ Refresh
                                 </button>
                                 <button
                                     onClick={handleResetServices}
-                                    className="px-3 py-2 rounded-xl bg-red-950/40 border border-red-500/40 text-red-300 hover:bg-red-900/60 text-xs font-semibold transition-colors cursor-pointer"
+                                    className="px-3.5 py-2.5 rounded-2xl bg-red-950/30 border border-red-500/30 text-red-300 hover:bg-red-900/50 text-xs font-semibold cursor-pointer"
                                 >
-                                    Reset to Defaults
+                                    Reset Defaults
                                 </button>
                             </div>
                         </div>
 
+                        {/* Category Filter Pills */}
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                            <button
+                                onClick={() => setServiceCategoryFilter('All')}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${serviceCategoryFilter === 'All' ? 'bg-[#f70776] text-white shadow-md' : 'bg-[#161313] text-gray-400 hover:text-white border border-[#261E1E]'}`}
+                            >
+                                All Offerings ({services.length})
+                            </button>
+                            <button
+                                onClick={() => setServiceCategoryFilter('DJ Events')}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${serviceCategoryFilter === 'DJ Events' ? 'bg-[#f70776] text-white shadow-md' : 'bg-[#161313] text-gray-400 hover:text-white border border-[#261E1E]'}`}
+                            >
+                                🎧 DJ & Event Sound
+                            </button>
+                            <button
+                                onClick={() => setServiceCategoryFilter('Raga Studio')}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${serviceCategoryFilter === 'Raga Studio' ? 'bg-[#f70776] text-white shadow-md' : 'bg-[#161313] text-gray-400 hover:text-white border border-[#261E1E]'}`}
+                            >
+                                🎙️ Raga Studio
+                            </button>
+                            <button
+                                onClick={() => setServiceCategoryFilter('Sampoorna Academy')}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${serviceCategoryFilter === 'Sampoorna Academy' ? 'bg-[#f70776] text-white shadow-md' : 'bg-[#161313] text-gray-400 hover:text-white border border-[#261E1E]'}`}
+                            >
+                                🎼 Sampoorna Academy
+                            </button>
+                        </div>
+
                         {/* Services Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {services.map((service) => (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                            {filteredServices.map((service, idx) => (
                                 <div
-                                    key={service.id}
-                                    className="bg-[#1C1717] border border-[#2B2323] hover:border-[#f70776]/60 rounded-2xl overflow-hidden shadow-xl flex flex-col justify-between transition-all duration-300 group"
+                                    key={service.id || idx}
+                                    className="bg-[#161313] rounded-3xl border border-[#261E1E] hover:border-[#f70776]/50 overflow-hidden shadow-xl flex flex-col justify-between transition-all group"
                                 >
-                                    {/* Image & Price Header */}
-                                    <div className="relative h-44 w-full bg-black/40 overflow-hidden">
-                                        <img
-                                            src={service.image}
-                                            alt={service.title}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-[#1C1717] via-transparent to-black/60" />
-                                        <div className="absolute top-3 left-3 right-3 flex items-center justify-end">
-                                            <span className="text-xs font-black px-3 py-1 rounded-full bg-[#f70776] text-white shadow-lg">
-                                                {service.price}
-                                            </span>
+                                    <div>
+                                        {/* Image banner */}
+                                        <div className="relative h-44 sm:h-48 w-full bg-black overflow-hidden">
+                                            <img
+                                                src={service.image}
+                                                alt={service.title}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#161313] via-transparent to-transparent"></div>
+
+                                            <div className="absolute top-3 left-3">
+                                                <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-black/80 border border-white/20 text-[#f70776] backdrop-blur-md">
+                                                    {service.category || 'DJ Service'}
+                                                </span>
+                                            </div>
+
+                                            <div className="absolute bottom-3 right-3">
+                                                <span className="px-3 py-1 rounded-xl text-xs font-black bg-[#f70776] text-white shadow-lg">
+                                                    {service.price}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="absolute bottom-2 left-4 right-4">
-                                            <h3 className="text-base font-bold text-white truncate">
+
+                                        {/* Content */}
+                                        <div className="p-4 sm:p-5 space-y-3">
+                                            <h3 className="text-base sm:text-lg font-bold text-white">
                                                 {service.title}
                                             </h3>
+
+                                            <p className="text-xs text-gray-400 font-light leading-relaxed min-h-[36px]">
+                                                {service.description}
+                                            </p>
+
+                                            {/* Features tags */}
+                                            <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#261E1E]">
+                                                {(service.features || []).map((feat, fIdx) => (
+                                                    <span
+                                                        key={fIdx}
+                                                        className="px-2 py-0.5 rounded-md bg-[#0E0C0C] border border-[#2B2323] text-[10px] text-gray-300 font-medium"
+                                                    >
+                                                        ✓ {feat}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Description & Features */}
-                                    <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
-                                        <p className="text-xs text-gray-300 line-clamp-3 leading-relaxed">
-                                            {service.description}
-                                        </p>
-
-                                        {/* Features List */}
-                                        <div className="space-y-1 pt-2 border-t border-[#2B2323]">
-                                            {service.features?.map((f, idx) => (
-                                                <div key={idx} className="flex items-center gap-1.5 text-[11px] text-gray-400">
-                                                    <span className="text-[#f70776] font-bold">✓</span>
-                                                    <span>{f}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                        {/* Action Buttons */}
-                                        <div className="pt-3 border-t border-[#2B2323] flex items-center justify-end gap-2">
-                                            <button
-                                                onClick={() => setEditingService({ ...service, featuresStr: (service.features || []).join('\n') })}
-                                                className="px-3.5 py-1.5 bg-[#f70776] hover:bg-[#c3195d] text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteService(service)}
-                                                className="px-2.5 py-1.5 bg-red-900/30 hover:bg-red-800/60 border border-red-500/30 text-red-300 font-bold text-xs rounded-xl transition-all cursor-pointer"
-                                                title="Delete service"
-                                            >
-                                                🗑️
-                                            </button>
-                                        </div>
+                                    {/* Action Buttons */}
+                                    <div className="p-4 sm:p-5 pt-0 flex items-center gap-2">
+                                        <button
+                                            onClick={() => setEditingService(JSON.parse(JSON.stringify(service)))}
+                                            className="flex-1 py-2.5 bg-[#0E0C0C] hover:bg-[#f70776] text-gray-200 hover:text-white border border-[#2B2323] hover:border-[#f70776] rounded-xl text-xs font-bold transition-all cursor-pointer text-center"
+                                        >
+                                            ✏️ Edit Offering
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteService(service)}
+                                            className="px-3 py-2.5 bg-red-950/30 hover:bg-red-900/60 border border-red-500/30 text-red-300 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                            title="Delete service"
+                                        >
+                                            🗑️
+                                        </button>
                                     </div>
                                 </div>
                             ))}
                         </div>
-
-                        {/* CREATE SERVICE MODAL */}
-                        {isAddingService && (
-                            <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-                                <div className="relative bg-[#1C1717] border border-[#f70776]/50 rounded-3xl p-5 sm:p-7 max-w-xl w-full shadow-2xl space-y-4 my-auto max-h-[92vh] flex flex-col">
-                                    <div className="shrink-0 flex items-center justify-between border-b border-[#2B2323] pb-3">
-                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                            <span>✨</span> Add New DJ Service
-                                        </h3>
-                                        <button
-                                            onClick={() => setIsAddingService(false)}
-                                            className="text-gray-400 hover:text-white text-lg font-bold cursor-pointer"
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-
-                                    <form onSubmit={handleCreateService} className="space-y-4 overflow-y-auto pr-1 flex-1">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-300 mb-1">Service Title</label>
-                                                <input
-                                                    type="text"
-                                                    value={newService.title}
-                                                    onChange={e => setNewService({ ...newService, title: e.target.value })}
-                                                    placeholder="e.g. Festival EDM & DJ Beats"
-                                                    className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                    required
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-300 mb-1">Price Tag</label>
-                                                <input
-                                                    type="text"
-                                                    value={newService.price}
-                                                    onChange={e => setNewService({ ...newService, price: e.target.value })}
-                                                    placeholder="e.g. ₹25,000 or $399"
-                                                    className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Folder File Upload for Service Image */}
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-300 mb-1">Service Showcase Image</label>
-                                            <div className="flex items-center gap-3">
-                                                {newService.image && (
-                                                    <div className="relative w-20 h-14 rounded-xl overflow-hidden shrink-0 border border-white/20 bg-black">
-                                                        <img src={newService.image} alt="Preview" className="w-full h-full object-cover" />
-                                                    </div>
-                                                )}
-                                                <div className="flex-1">
-                                                    <label className="flex items-center justify-center gap-2 px-4 py-2.5 bg-black/50 hover:bg-black/70 border border-dashed border-gray-600 hover:border-[#f70776] rounded-xl text-xs font-semibold text-gray-300 hover:text-white cursor-pointer transition-all">
-                                                        <input
-                                                            type="file"
-                                                            accept="image/*"
-                                                            className="hidden"
-                                                            disabled={isUploadingServiceImage}
-                                                            onChange={async (e) => {
-                                                                const file = e.target.files?.[0];
-                                                                if (!file) return;
-                                                                try {
-                                                                    setIsUploadingServiceImage(true);
-                                                                    const url = await handleUploadMediaFile(file);
-                                                                    setNewService(prev => ({ ...prev, image: url }));
-                                                                    showNotification('Image uploaded successfully!');
-                                                                } catch (err) {
-                                                                    alert('Failed to upload image: ' + err.message);
-                                                                } finally {
-                                                                    setIsUploadingServiceImage(false);
-                                                                }
-                                                            }}
-                                                        />
-                                                        {isUploadingServiceImage ? (
-                                                            <span className="text-[#f70776] font-bold">Uploading image...</span>
-                                                        ) : (
-                                                            <>
-                                                                <span>📁</span>
-                                                                <span>{newService.image ? 'Change Image from Folders' : 'Upload Image from Folders'}</span>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-300 mb-1">Service Description</label>
-                                            <textarea
-                                                rows="3"
-                                                value={newService.description}
-                                                onChange={e => setNewService({ ...newService, description: e.target.value })}
-                                                placeholder="Describe the audio-visual performance and energy..."
-                                                className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-300 mb-1">Features (One per line)</label>
-                                            <textarea
-                                                rows="3"
-                                                value={newService.featuresStr}
-                                                onChange={e => setNewService({ ...newService, featuresStr: e.target.value })}
-                                                className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                placeholder="Precision Acoustic Tuning&#10;Tour-Grade Wireless Sound&#10;Ambient Staging"
-                                            />
-                                        </div>
-
-                                        <div className="shrink-0 flex items-center justify-end gap-3 pt-3 border-t border-[#2B2323]">
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsAddingService(false)}
-                                                className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white border border-gray-700 cursor-pointer"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                disabled={isSavingService || isUploadingServiceImage}
-                                                className="px-6 py-2 rounded-xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all disabled:opacity-50 cursor-pointer"
-                                            >
-                                                {isSavingService ? 'Saving...' : 'Add & Publish Service'}
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* EDIT SERVICE MODAL */}
-                        {editingService && (
-                            <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-                                <div className="relative bg-[#1C1717] border border-[#f70776]/50 rounded-3xl p-5 sm:p-7 max-w-xl w-full shadow-2xl space-y-4 my-auto max-h-[92vh] flex flex-col">
-                                    <div className="shrink-0 flex items-center justify-between border-b border-[#2B2323] pb-3">
-                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                            <span>✏️</span> Edit Service: {editingService.title}
-                                        </h3>
-                                        <button
-                                            onClick={() => setEditingService(null)}
-                                            className="text-gray-400 hover:text-white text-lg font-bold cursor-pointer"
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-
-                                    <form onSubmit={handleSaveService} className="space-y-4 overflow-y-auto pr-1 flex-1">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-300 mb-1">Service Title</label>
-                                                <input
-                                                    type="text"
-                                                    value={editingService.title}
-                                                    onChange={e => setEditingService({ ...editingService, title: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                    required
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-300 mb-1">Price Tag (e.g. ₹25,000)</label>
-                                                <input
-                                                    type="text"
-                                                    value={editingService.price}
-                                                    onChange={e => setEditingService({ ...editingService, price: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Folder File Upload for Edit Service Image */}
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-300 mb-1">Service Showcase Image</label>
-                                            <div className="flex items-center gap-3">
-                                                {editingService.image && (
-                                                    <div className="relative w-20 h-14 rounded-xl overflow-hidden shrink-0 border border-white/20 bg-black">
-                                                        <img src={editingService.image} alt="Preview" className="w-full h-full object-cover" />
-                                                    </div>
-                                                )}
-                                                <div className="flex-1">
-                                                    <label className="flex items-center justify-center gap-2 px-4 py-2.5 bg-black/50 hover:bg-black/70 border border-dashed border-gray-600 hover:border-[#f70776] rounded-xl text-xs font-semibold text-gray-300 hover:text-white cursor-pointer transition-all">
-                                                        <input
-                                                            type="file"
-                                                            accept="image/*"
-                                                            className="hidden"
-                                                            disabled={isUploadingServiceImage}
-                                                            onChange={async (e) => {
-                                                                const file = e.target.files?.[0];
-                                                                if (!file) return;
-                                                                try {
-                                                                    setIsUploadingServiceImage(true);
-                                                                    const url = await handleUploadMediaFile(file);
-                                                                    setEditingService(prev => ({ ...prev, image: url }));
-                                                                    showNotification('Image updated successfully!');
-                                                                } catch (err) {
-                                                                    alert('Failed to upload image: ' + err.message);
-                                                                } finally {
-                                                                    setIsUploadingServiceImage(false);
-                                                                }
-                                                            }}
-                                                        />
-                                                        {isUploadingServiceImage ? (
-                                                            <span className="text-[#f70776] font-bold">Uploading image...</span>
-                                                        ) : (
-                                                            <>
-                                                                <span>📁</span>
-                                                                <span>Change Image from Folders</span>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-300 mb-1">Service Description</label>
-                                            <textarea
-                                                rows="3"
-                                                value={editingService.description}
-                                                onChange={e => setEditingService({ ...editingService, description: e.target.value })}
-                                                className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-300 mb-1">Features (One per line)</label>
-                                            <textarea
-                                                rows="3"
-                                                value={editingService.featuresStr}
-                                                onChange={e => {
-                                                    const val = e.target.value;
-                                                    const feats = val.split('\n').filter(s => s.trim().length > 0);
-                                                    setEditingService({ ...editingService, featuresStr: val, features: feats });
-                                                }}
-                                                className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                placeholder="Precision Acoustic Tuning&#10;Tour-Grade Wireless Sound&#10;Ambient Staging"
-                                            />
-                                        </div>
-
-                                        <div className="shrink-0 flex items-center justify-end gap-3 pt-3 border-t border-[#2B2323]">
-                                            <button
-                                                type="button"
-                                                onClick={() => setEditingService(null)}
-                                                className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white border border-gray-700 cursor-pointer"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                disabled={isSavingService || isUploadingServiceImage}
-                                                className="px-6 py-2 rounded-xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all disabled:opacity-50 cursor-pointer"
-                                            >
-                                                {isSavingService ? 'Saving...' : 'Save & Publish Live'}
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 )}
 
-                {/* TAB 4: PRICING PLANS MANAGER */}
+                {/* ------------------------------------------------------------- */}
+                {/* TAB 4: EVENT PRICING PLANS & TIERS */}
+                {/* ------------------------------------------------------------- */}
                 {activeTab === 'plans' && (
                     <div className="space-y-6">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#1C1717] p-5 rounded-2xl border border-[#2B2323]">
+                        {/* Header Box */}
+                        <div className="bg-[#161313] p-4 sm:p-6 rounded-3xl border border-[#261E1E] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div>
-                                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <span>🎚️</span> Manage Event Pricing Plans & Tiers
+                                <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                                    <span>🎚️</span> Event Pricing Packages & Tiers
                                 </h2>
                                 <p className="text-gray-400 text-xs mt-1">
-                                    Add custom packages, edit single event / tour rates, badge highlights, and features.
+                                    Manage concert sound packages, wedding DJ rates, badge highlights, video feeds, and feature sets.
                                 </p>
                             </div>
-                            <div className="flex flex-wrap items-center gap-3">
+
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
                                 <button
                                     onClick={() => setIsAddingPlan(true)}
-                                    className="px-4 py-2 rounded-xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all flex items-center gap-1.5 cursor-pointer"
+                                    className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                                 >
-                                    <span>+</span> Add New Plan
+                                    <span>+</span> Add Pricing Tier
                                 </button>
                                 <button
                                     onClick={fetchPlans}
-                                    className="px-3 py-2 rounded-xl border border-gray-700 text-gray-300 hover:text-white text-xs font-semibold cursor-pointer"
+                                    className="px-3.5 py-2.5 rounded-2xl bg-[#0E0C0C] border border-[#2B2323] text-gray-300 hover:text-white text-xs font-semibold cursor-pointer"
                                 >
                                     ↻ Refresh
                                 </button>
                                 <button
                                     onClick={handleResetPlans}
-                                    className="px-3 py-2 rounded-xl bg-red-950/40 border border-red-500/40 text-red-300 hover:bg-red-900/60 text-xs font-semibold transition-colors cursor-pointer"
+                                    className="px-3.5 py-2.5 rounded-2xl bg-red-950/30 border border-red-500/30 text-red-300 hover:bg-red-900/50 text-xs font-semibold cursor-pointer"
                                 >
-                                    Reset to Defaults
+                                    Reset Defaults
                                 </button>
                             </div>
                         </div>
@@ -1416,56 +1341,41 @@ const MediaManager = ({ onLogout }) => {
                             {plans.map((plan, idx) => (
                                 <div
                                     key={idx}
-                                    className={`bg-[#1C1717] rounded-3xl p-6 border shadow-xl flex flex-col justify-between transition-all ${plan.theme === 'silver'
-                                        ? 'border-slate-300/40 bg-gradient-to-b from-[#22252A] to-[#1C1717]'
+                                    className={`rounded-3xl p-5 sm:p-6 border shadow-2xl flex flex-col justify-between transition-all ${plan.theme === 'silver'
+                                        ? 'border-slate-300/40 bg-gradient-to-b from-[#1C1F24] to-[#120F0F]'
                                         : plan.theme === 'gold'
-                                            ? 'border-amber-400/40 bg-gradient-to-b from-[#2A2315] to-[#1C1717]'
-                                            : 'border-[#2B2323] hover:border-[#f70776]/50'
+                                            ? 'border-amber-400/40 bg-gradient-to-b from-[#241E14] to-[#120F0F]'
+                                            : 'border-[#261E1E] bg-[#161313] hover:border-[#f70776]/50'
                                         }`}
                                 >
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-[#141010] border border-white/10 text-gray-300">
+                                            <span className="text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-black/60 border border-white/10 text-gray-200">
                                                 {plan.badge}
                                             </span>
                                             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                                                Theme: <strong className="text-white">{plan.theme}</strong>
+                                                Theme: <strong className="text-white">{plan.theme || 'standard'}</strong>
                                             </span>
                                         </div>
 
-                                        {/* Multi-Media (Videos & Images) Preview Frame */}
+                                        {/* Multi-Media Feeds Preview */}
                                         {((plan.videos && plan.videos.length > 0) || plan.videoUrl) && (
-                                            <div className="relative rounded-2xl overflow-hidden bg-black/80 border border-white/10 p-2 space-y-2 group">
+                                            <div className="bg-black/60 border border-white/10 rounded-2xl p-2 space-y-2">
                                                 <div className="flex items-center justify-between px-1 text-[10px] font-bold text-gray-300">
                                                     <span className="text-[#f70776] flex items-center gap-1">
-                                                        <span>🎬📸</span> {plan.videos?.length || 1} Media Feeds (Videos & Images)
+                                                        <span>🎬</span> {plan.videos?.length || 1} Media Feed(s)
                                                     </span>
-                                                    <span className="text-gray-400">Autoplaying / Static</span>
                                                 </div>
-                                                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                                                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
                                                     {(plan.videos && plan.videos.length > 0 ? plan.videos : [plan.videoUrl]).map((vSrc, vidIdx) => {
                                                         const isImg = isImageMedia(vSrc);
                                                         return (
-                                                            <div key={vidIdx} className="relative w-24 h-16 rounded-lg overflow-hidden shrink-0 border border-white/10 bg-black">
+                                                            <div key={vidIdx} className="relative w-24 h-16 rounded-xl overflow-hidden shrink-0 border border-white/10 bg-black">
                                                                 {isImg ? (
-                                                                    <img
-                                                                        src={vSrc}
-                                                                        alt={`Media ${vidIdx + 1}`}
-                                                                        className="w-full h-full object-cover"
-                                                                    />
+                                                                    <img src={vSrc} alt={`Media ${vidIdx + 1}`} className="w-full h-full object-cover" />
                                                                 ) : (
-                                                                    <video
-                                                                        src={vSrc}
-                                                                        className="w-full h-full object-cover"
-                                                                        muted
-                                                                        loop
-                                                                        playsInline
-                                                                        autoPlay
-                                                                    />
+                                                                    <video src={vSrc} className="w-full h-full object-cover" muted loop playsInline autoPlay />
                                                                 )}
-                                                                <span className={`absolute bottom-0.5 right-1 text-[8px] px-1 rounded font-bold ${isImg ? 'bg-cyan-900/90 text-cyan-200 border border-cyan-500/30' : 'bg-pink-900/90 text-pink-200 border border-pink-500/30'}`}>
-                                                                    {isImg ? 'IMG' : 'VID'} #{vidIdx + 1}
-                                                                </span>
                                                             </div>
                                                         );
                                                     })}
@@ -1474,25 +1384,24 @@ const MediaManager = ({ onLogout }) => {
                                         )}
 
                                         <div>
-                                            <h3 className="text-2xl font-black uppercase text-white tracking-tight">
+                                            <h3 className="text-xl sm:text-2xl font-black uppercase text-white tracking-tight">
                                                 {plan.name}
                                             </h3>
-                                            <p className="text-xs text-gray-400 font-light mt-1 min-h-[32px]">
+                                            <p className="text-xs text-gray-400 font-light mt-1">
                                                 {plan.desc}
                                             </p>
                                         </div>
 
-                                        {/* Pricing Display */}
-                                        <div className="p-3 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between">
-                                            <span className="text-gray-400 text-xs">Event Package Price:</span>
-                                            <span className="font-extrabold text-[#f70776] text-base">{plan.price || plan.monthlyPrice}</span>
+                                        <div className="p-3 bg-[#0E0C0C] rounded-2xl border border-white/5 flex items-center justify-between">
+                                            <span className="text-gray-400 text-xs">Event Package Rate:</span>
+                                            <span className="font-black text-[#f70776] text-base">{plan.price || plan.monthlyPrice}</span>
                                         </div>
 
-                                        {/* Features List Preview */}
-                                        <div className="space-y-1.5 pt-2 border-t border-[#2B2323]">
+                                        {/* Features List */}
+                                        <div className="space-y-1.5 pt-2 border-t border-[#261E1E]">
                                             {plan.features?.map((feat, fIdx) => (
                                                 <div key={fIdx} className="flex items-center gap-2 text-xs">
-                                                    <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${feat.included ? 'bg-green-500/20 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+                                                    <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${feat.included ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-500'}`}>
                                                         {feat.included ? '✓' : '—'}
                                                     </span>
                                                     <span className={feat.included ? 'text-gray-200' : 'text-gray-500 line-through'}>
@@ -1504,16 +1413,16 @@ const MediaManager = ({ onLogout }) => {
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="pt-4 mt-4 border-t border-[#2B2323] flex items-center gap-2">
+                                    <div className="pt-4 mt-4 border-t border-[#261E1E] flex items-center gap-2">
                                         <button
                                             onClick={() => setEditingPlan(JSON.parse(JSON.stringify(plan)))}
                                             className="flex-1 py-2.5 bg-[#f70776] hover:bg-[#c3195d] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer text-center"
                                         >
-                                            Edit Plan & Media
+                                            ✏️ Edit Tier
                                         </button>
                                         <button
                                             onClick={() => handleDeletePlan(plan)}
-                                            className="px-3 py-2.5 bg-red-900/30 hover:bg-red-800/60 border border-red-500/30 text-red-300 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                                            className="px-3 py-2.5 bg-red-950/30 hover:bg-red-900/60 border border-red-500/30 text-red-300 font-bold text-xs rounded-xl transition-all cursor-pointer"
                                             title="Delete plan"
                                         >
                                             🗑️
@@ -1522,799 +1431,101 @@ const MediaManager = ({ onLogout }) => {
                                 </div>
                             ))}
                         </div>
-
-                        {/* CREATE PRICING PLAN MODAL */}
-                        {isAddingPlan && (
-                            <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-                                <div className="relative bg-[#1C1717] border border-[#f70776]/50 rounded-3xl p-5 sm:p-7 max-w-2xl w-full shadow-2xl space-y-4 my-auto max-h-[92vh] flex flex-col">
-                                    <div className="shrink-0 flex items-center justify-between border-b border-[#2B2323] pb-3">
-                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                            <span>✨</span> Add New Pricing Plan
-                                        </h3>
-                                        <button
-                                            onClick={() => setIsAddingPlan(false)}
-                                            className="text-gray-400 hover:text-white text-lg font-bold cursor-pointer"
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-
-                                    <form onSubmit={handleCreatePlan} className="space-y-4 overflow-y-auto pr-1 flex-1">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-300 mb-1">Plan Name</label>
-                                                <input
-                                                    type="text"
-                                                    value={newPlan.name}
-                                                    onChange={e => setNewPlan({ ...newPlan, name: e.target.value })}
-                                                    placeholder="e.g. Festival VIP Headliner"
-                                                    className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                    required
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-300 mb-1">Badge</label>
-                                                <input
-                                                    type="text"
-                                                    value={newPlan.badge}
-                                                    onChange={e => setNewPlan({ ...newPlan, badge: e.target.value })}
-                                                    placeholder="e.g. MOST POPULAR, VIP, FESTIVAL"
-                                                    className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-300 mb-1">Price (e.g. $499 or ₹25,000)</label>
-                                                <input
-                                                    type="text"
-                                                    value={newPlan.price || newPlan.monthlyPrice || ''}
-                                                    onChange={e => setNewPlan({ ...newPlan, price: e.target.value, monthlyPrice: e.target.value })}
-                                                    placeholder="$499 or ₹25,000"
-                                                    className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                    required
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-300 mb-1">Theme Accent</label>
-                                                <select
-                                                    value={newPlan.theme || 'standard'}
-                                                    onChange={e => setNewPlan({ ...newPlan, theme: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                >
-                                                    <option value="standard">Standard</option>
-                                                    <option value="silver">Silver Glow</option>
-                                                    <option value="gold">Gold VIP</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        {/* MULTI-MEDIA (VIDEOS & IMAGES) MANAGEMENT SECTION */}
-                                        <div className="p-4 bg-black/40 border border-[#f70776]/30 rounded-2xl space-y-3">
-                                            <div className="flex items-center justify-between">
-                                                <label className="block text-xs font-bold text-white flex items-center gap-1.5">
-                                                    <span>🎬📸</span> Plan Showcase Media (Videos & Images)
-                                                </label>
-                                                <span className="text-[10px] text-[#f70776] font-semibold">
-                                                    {(newPlan.videos || []).length} Media Configured
-                                                </span>
-                                            </div>
-
-                                            {/* Folder Upload & URL Input Row */}
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                {/* Folder Upload Button */}
-                                                <label className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/60 hover:bg-black/80 border border-dashed border-gray-600 hover:border-[#f70776] rounded-xl text-xs font-semibold text-gray-300 hover:text-white cursor-pointer transition-all">
-                                                    <input
-                                                        type="file"
-                                                        accept="video/*,image/*"
-                                                        className="hidden"
-                                                        disabled={isUploadingPlanMedia}
-                                                        onChange={async (e) => {
-                                                            const file = e.target.files?.[0];
-                                                            if (!file) return;
-                                                            try {
-                                                                setIsUploadingPlanMedia(true);
-                                                                const url = await handleUploadMediaFile(file);
-                                                                const current = (newPlan.videos || []).filter(Boolean);
-                                                                setNewPlan(prev => ({
-                                                                    ...prev,
-                                                                    videos: [...current, url],
-                                                                    videoUrl: current[0] || url
-                                                                }));
-                                                                showNotification('Media file uploaded successfully!');
-                                                            } catch (err) {
-                                                                alert('Failed to upload media file: ' + err.message);
-                                                            } finally {
-                                                                setIsUploadingPlanMedia(false);
-                                                            }
-                                                        }}
-                                                    />
-                                                    {isUploadingPlanMedia ? (
-                                                        <span className="text-[#f70776] font-bold animate-pulse">Uploading file...</span>
-                                                    ) : (
-                                                        <>
-                                                            <span>📁</span>
-                                                            <span>Upload Image or Video</span>
-                                                        </>
-                                                    )}
-                                                </label>
-
-                                                {/* Direct URL Input */}
-                                                <div className="flex items-center gap-1">
-                                                    <input
-                                                        type="url"
-                                                        value={planMediaUrlInput}
-                                                        onChange={e => setPlanMediaUrlInput(e.target.value)}
-                                                        placeholder="Or paste media URL (jpg/mp4)..."
-                                                        className="flex-1 px-3 py-2 bg-black/60 border border-gray-700 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#f70776]"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            if (!planMediaUrlInput.trim()) return;
-                                                            const url = planMediaUrlInput.trim();
-                                                            const current = (newPlan.videos || []).filter(Boolean);
-                                                            setNewPlan(prev => ({
-                                                                ...prev,
-                                                                videos: [...current, url],
-                                                                videoUrl: current[0] || url
-                                                            }));
-                                                            setPlanMediaUrlInput('');
-                                                            showNotification('Media URL added!');
-                                                        }}
-                                                        className="px-3 py-2 bg-[#f70776]/20 hover:bg-[#f70776] text-[#f70776] hover:text-white border border-[#f70776]/40 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                                                    >
-                                                        + Add
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            {/* List of Media Previews & Remove */}
-                                            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                                                {(newPlan.videos || []).map((vUrl, vIdx) => {
-                                                    const isImg = isImageMedia(vUrl);
-                                                    return (
-                                                        <div key={vIdx} className="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-gray-800">
-                                                            <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${isImg ? 'bg-cyan-950 text-cyan-300 border border-cyan-700' : 'bg-pink-950 text-pink-300 border border-pink-700'}`}>
-                                                                {isImg ? 'IMAGE' : 'VIDEO'}
-                                                            </span>
-                                                            <span className="flex-1 text-xs text-gray-300 truncate">{vUrl}</span>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    const updated = (newPlan.videos || []).filter((_, idx) => idx !== vIdx);
-                                                                    setNewPlan({
-                                                                        ...newPlan,
-                                                                        videos: updated,
-                                                                        videoUrl: updated[0] || ''
-                                                                    });
-                                                                }}
-                                                                className="px-2 py-1 bg-red-900/30 hover:bg-red-800/60 text-red-300 rounded-lg text-xs cursor-pointer"
-                                                                title="Remove this media"
-                                                            >
-                                                                ✕
-                                                            </button>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-
-                                            {/* Live Preview Carousel */}
-                                            {(newPlan.videos || []).filter(Boolean).length > 0 && (
-                                                <div className="pt-2 border-t border-gray-800">
-                                                    <span className="text-[10px] font-semibold text-gray-400 block mb-1.5">Live Preview:</span>
-                                                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
-                                                        {(newPlan.videos || []).filter(Boolean).map((vSrc, pIdx) => {
-                                                            const isImg = isImageMedia(vSrc);
-                                                            return (
-                                                                <div key={pIdx} className="relative w-28 h-20 rounded-lg overflow-hidden shrink-0 border border-white/20 bg-black">
-                                                                    {isImg ? (
-                                                                        <img
-                                                                            src={vSrc}
-                                                                            alt={`Media ${pIdx + 1}`}
-                                                                            className="w-full h-full object-cover"
-                                                                        />
-                                                                    ) : (
-                                                                        <video
-                                                                            src={vSrc}
-                                                                            className="w-full h-full object-cover"
-                                                                            muted
-                                                                            loop
-                                                                            autoPlay
-                                                                            playsInline
-                                                                        />
-                                                                    )}
-                                                                    <span className={`absolute top-1 left-1 text-[8px] px-1 rounded font-bold ${isImg ? 'bg-cyan-900/90 text-cyan-200' : 'bg-pink-900/90 text-pink-200'}`}>
-                                                                        {isImg ? 'IMG' : 'VID'} #{pIdx + 1}
-                                                                    </span>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-300 mb-1">Plan Description</label>
-                                            <textarea
-                                                rows="2"
-                                                value={newPlan.desc}
-                                                onChange={e => setNewPlan({ ...newPlan, desc: e.target.value })}
-                                                placeholder="Brief overview of what this tier delivers..."
-                                                className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                required
-                                            />
-                                        </div>
-
-                                        {/* Features List Editor with Toggles */}
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <label className="block text-xs font-semibold text-gray-300">Feature Inclusions</label>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const feats = newPlan.features || [];
-                                                        setNewPlan({
-                                                            ...newPlan,
-                                                            features: [...feats, { text: 'New Feature Item', included: true }]
-                                                        });
-                                                    }}
-                                                    className="text-[11px] text-[#f70776] hover:underline font-bold cursor-pointer"
-                                                >
-                                                    + Add Feature
-                                                </button>
-                                            </div>
-
-                                            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                                                {newPlan.features?.map((feat, fIdx) => (
-                                                    <div key={fIdx} className="flex items-center gap-2 bg-black/30 p-2 rounded-xl border border-gray-800">
-                                                        <button
-                                                            type="button"
-                                                             onClick={() => {
-                                                                const updated = [...newPlan.features];
-                                                                updated[fIdx].included = !updated[fIdx].included;
-                                                                setNewPlan({ ...newPlan, features: updated });
-                                                            }}
-                                                            className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${feat.included ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-gray-800 text-gray-500 border border-gray-700'}`}
-                                                            title="Toggle included/excluded"
-                                                        >
-                                                            {feat.included ? 'Included' : 'Excluded'}
-                                                        </button>
-                                                        <input
-                                                            type="text"
-                                                            value={feat.text}
-                                                            onChange={e => {
-                                                                const updated = [...newPlan.features];
-                                                                updated[fIdx].text = e.target.value;
-                                                                setNewPlan({ ...newPlan, features: updated });
-                                                            }}
-                                                            className="flex-1 bg-transparent border-none text-xs text-white focus:outline-none"
-                                                        />
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const updated = newPlan.features.filter((_, idx) => idx !== fIdx);
-                                                                setNewPlan({ ...newPlan, features: updated });
-                                                            }}
-                                                            className="text-red-400 hover:text-red-300 text-xs px-1 cursor-pointer"
-                                                            title="Remove feature"
-                                                        >
-                                                            ✕
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className="shrink-0 flex items-center justify-end gap-3 pt-3 border-t border-[#2B2323]">
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsAddingPlan(false)}
-                                                className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white border border-gray-700 cursor-pointer"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                disabled={isSavingPlan || isUploadingPlanMedia}
-                                                className="px-6 py-2 rounded-xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all disabled:opacity-50 cursor-pointer"
-                                            >
-                                                {isSavingPlan ? 'Saving...' : 'Add & Publish Plan'}
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* EDIT PRICING PLAN MODAL */}
-                        {editingPlan && (
-                            <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-                                <div className="relative bg-[#1C1717] border border-[#f70776]/50 rounded-3xl p-5 sm:p-7 max-w-2xl w-full shadow-2xl space-y-4 my-auto max-h-[92vh] flex flex-col">
-                                    <div className="shrink-0 flex items-center justify-between border-b border-[#2B2323] pb-3">
-                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                            <span>🎚️</span> Edit Plan: {editingPlan.name}
-                                        </h3>
-                                        <button
-                                            onClick={() => setEditingPlan(null)}
-                                            className="text-gray-400 hover:text-white text-lg font-bold cursor-pointer"
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-
-                                    <form onSubmit={handleSavePlan} className="space-y-4 overflow-y-auto pr-1 flex-1">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-300 mb-1">Plan Name</label>
-                                                <input
-                                                    type="text"
-                                                    value={editingPlan.name}
-                                                    onChange={e => setEditingPlan({ ...editingPlan, name: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                    required
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-300 mb-1">Badge</label>
-                                                <input
-                                                    type="text"
-                                                    value={editingPlan.badge}
-                                                    onChange={e => setEditingPlan({ ...editingPlan, badge: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-300 mb-1">Price (e.g. $499 or ₹25,000)</label>
-                                                <input
-                                                    type="text"
-                                                    value={editingPlan.price || editingPlan.monthlyPrice || ''}
-                                                    onChange={e => setEditingPlan({ ...editingPlan, price: e.target.value, monthlyPrice: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                    placeholder="$499 or ₹25,000"
-                                                    required
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-300 mb-1">Theme Accent</label>
-                                                <select
-                                                    value={editingPlan.theme || 'standard'}
-                                                    onChange={e => setEditingPlan({ ...editingPlan, theme: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                >
-                                                    <option value="standard">Standard</option>
-                                                    <option value="silver">Silver Glow</option>
-                                                    <option value="gold">Gold VIP</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        {/* MULTI-MEDIA (VIDEOS & IMAGES) MANAGEMENT SECTION IN EDIT MODAL */}
-                                        <div className="p-4 bg-black/40 border border-[#f70776]/30 rounded-2xl space-y-3">
-                                            <div className="flex items-center justify-between">
-                                                <label className="block text-xs font-bold text-white flex items-center gap-1.5">
-                                                    <span>🎬📸</span> Plan Showcase Media (Videos & Images)
-                                                </label>
-                                                <span className="text-[10px] text-[#f70776] font-semibold">
-                                                    {(editingPlan.videos || (editingPlan.videoUrl ? [editingPlan.videoUrl] : [])).length} Media Configured
-                                                </span>
-                                            </div>
-
-                                            {/* Folder Upload & URL Input Row */}
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                {/* Folder Upload Button */}
-                                                <label className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/60 hover:bg-black/80 border border-dashed border-gray-600 hover:border-[#f70776] rounded-xl text-xs font-semibold text-gray-300 hover:text-white cursor-pointer transition-all">
-                                                    <input
-                                                        type="file"
-                                                        accept="video/*,image/*"
-                                                        className="hidden"
-                                                        disabled={isUploadingPlanMedia}
-                                                        onChange={async (e) => {
-                                                            const file = e.target.files?.[0];
-                                                            if (!file) return;
-                                                            try {
-                                                                setIsUploadingPlanMedia(true);
-                                                                const url = await handleUploadMediaFile(file);
-                                                                const currentList = editingPlan.videos && editingPlan.videos.length > 0
-                                                                    ? [...editingPlan.videos]
-                                                                    : editingPlan.videoUrl ? [editingPlan.videoUrl] : [];
-                                                                const updated = [...currentList, url];
-                                                                setEditingPlan(prev => ({
-                                                                    ...prev,
-                                                                    videos: updated,
-                                                                    videoUrl: updated[0] || url
-                                                                }));
-                                                                showNotification('Media file uploaded successfully!');
-                                                            } catch (err) {
-                                                                alert('Failed to upload media file: ' + err.message);
-                                                            } finally {
-                                                                setIsUploadingPlanMedia(false);
-                                                            }
-                                                        }}
-                                                    />
-                                                    {isUploadingPlanMedia ? (
-                                                        <span className="text-[#f70776] font-bold animate-pulse">Uploading file...</span>
-                                                    ) : (
-                                                        <>
-                                                            <span>📁</span>
-                                                            <span>Upload Image or Video</span>
-                                                        </>
-                                                    )}
-                                                </label>
-
-                                                {/* Direct URL Input */}
-                                                <div className="flex items-center gap-1">
-                                                    <input
-                                                        type="url"
-                                                        value={editPlanMediaUrlInput}
-                                                        onChange={e => setEditPlanMediaUrlInput(e.target.value)}
-                                                        placeholder="Or paste media URL (jpg/mp4)..."
-                                                        className="flex-1 px-3 py-2 bg-black/60 border border-gray-700 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#f70776]"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            if (!editPlanMediaUrlInput.trim()) return;
-                                                            const url = editPlanMediaUrlInput.trim();
-                                                            const currentList = editingPlan.videos && editingPlan.videos.length > 0
-                                                                ? [...editingPlan.videos]
-                                                                : editingPlan.videoUrl ? [editingPlan.videoUrl] : [];
-                                                            const updated = [...currentList, url];
-                                                            setEditingPlan(prev => ({
-                                                                ...prev,
-                                                                videos: updated,
-                                                                videoUrl: updated[0] || url
-                                                            }));
-                                                            setEditPlanMediaUrlInput('');
-                                                            showNotification('Media URL added!');
-                                                        }}
-                                                        className="px-3 py-2 bg-[#f70776]/20 hover:bg-[#f70776] text-[#f70776] hover:text-white border border-[#f70776]/40 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                                                    >
-                                                        + Add
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            {/* List of Media Previews & Remove */}
-                                            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                                                {(editingPlan.videos && editingPlan.videos.length > 0
-                                                    ? editingPlan.videos
-                                                    : editingPlan.videoUrl ? [editingPlan.videoUrl] : []
-                                                ).map((vUrl, vIdx) => {
-                                                    const isImg = isImageMedia(vUrl);
-                                                    return (
-                                                        <div key={vIdx} className="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-gray-800">
-                                                            <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${isImg ? 'bg-cyan-950 text-cyan-300 border border-cyan-700' : 'bg-pink-950 text-pink-300 border border-pink-700'}`}>
-                                                                {isImg ? 'IMAGE' : 'VIDEO'}
-                                                            </span>
-                                                            <span className="flex-1 text-xs text-gray-300 truncate">{vUrl}</span>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    const currentList = editingPlan.videos && editingPlan.videos.length > 0
-                                                                        ? [...editingPlan.videos]
-                                                                        : editingPlan.videoUrl ? [editingPlan.videoUrl] : [];
-                                                                    const updated = currentList.filter((_, idx) => idx !== vIdx);
-                                                                    setEditingPlan({
-                                                                        ...editingPlan,
-                                                                        videos: updated,
-                                                                        videoUrl: updated[0] || ''
-                                                                    });
-                                                                }}
-                                                                className="px-2 py-1 bg-red-900/30 hover:bg-red-800/60 text-red-300 rounded-lg text-xs cursor-pointer"
-                                                                title="Remove this media"
-                                                            >
-                                                                ✕
-                                                            </button>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-
-                                            {/* Live Preview Carousel */}
-                                            {(editingPlan.videos || (editingPlan.videoUrl ? [editingPlan.videoUrl] : [])).filter(Boolean).length > 0 && (
-                                                <div className="pt-2 border-t border-gray-800">
-                                                    <span className="text-[10px] font-semibold text-gray-400 block mb-1.5">Live Preview:</span>
-                                                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
-                                                        {(editingPlan.videos || (editingPlan.videoUrl ? [editingPlan.videoUrl] : [])).filter(Boolean).map((vSrc, pIdx) => {
-                                                            const isImg = isImageMedia(vSrc);
-                                                            return (
-                                                                <div key={pIdx} className="relative w-28 h-20 rounded-lg overflow-hidden shrink-0 border border-white/20 bg-black">
-                                                                    {isImg ? (
-                                                                        <img
-                                                                            src={vSrc}
-                                                                            alt={`Media ${pIdx + 1}`}
-                                                                            className="w-full h-full object-cover"
-                                                                        />
-                                                                    ) : (
-                                                                        <video
-                                                                            src={vSrc}
-                                                                            className="w-full h-full object-cover"
-                                                                            muted
-                                                                            loop
-                                                                            autoPlay
-                                                                            playsInline
-                                                                        />
-                                                                    )}
-                                                                    <span className={`absolute top-1 left-1 text-[8px] px-1 rounded font-bold ${isImg ? 'bg-cyan-900/90 text-cyan-200' : 'bg-pink-900/90 text-pink-200'}`}>
-                                                                        {isImg ? 'IMG' : 'VID'} #{pIdx + 1}
-                                                                    </span>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-300 mb-1">Plan Description</label>
-                                            <textarea
-                                                rows="2"
-                                                value={editingPlan.desc}
-                                                onChange={e => setEditingPlan({ ...editingPlan, desc: e.target.value })}
-                                                className="w-full px-3 py-2 bg-black/50 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#f70776]"
-                                                required
-                                            />
-                                        </div>
-
-                                        {/* Features List Editor with Toggles */}
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <label className="block text-xs font-semibold text-gray-300">Feature Capabilities & Inclusions</label>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const feats = editingPlan.features || [];
-                                                        setEditingPlan({
-                                                            ...editingPlan,
-                                                            features: [...feats, { text: 'New Feature Item', included: true }]
-                                                        });
-                                                    }}
-                                                    className="text-[11px] text-[#f70776] hover:underline font-bold cursor-pointer"
-                                                >
-                                                    + Add Feature
-                                                </button>
-                                            </div>
-
-                                            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                                                {editingPlan.features?.map((feat, fIdx) => (
-                                                    <div key={fIdx} className="flex items-center gap-2 bg-black/30 p-2 rounded-xl border border-gray-800">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const updated = [...editingPlan.features];
-                                                                updated[fIdx].included = !updated[fIdx].included;
-                                                                setEditingPlan({ ...editingPlan, features: updated });
-                                                            }}
-                                                            className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${feat.included ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-gray-800 text-gray-500 border border-gray-700'}`}
-                                                            title="Toggle included/excluded"
-                                                        >
-                                                            {feat.included ? 'Included' : 'Excluded'}
-                                                        </button>
-                                                        <input
-                                                            type="text"
-                                                            value={feat.text}
-                                                            onChange={e => {
-                                                                const updated = [...editingPlan.features];
-                                                                updated[fIdx].text = e.target.value;
-                                                                setEditingPlan({ ...editingPlan, features: updated });
-                                                            }}
-                                                            className="flex-1 bg-transparent border-none text-xs text-white focus:outline-none"
-                                                        />
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const updated = editingPlan.features.filter((_, idx) => idx !== fIdx);
-                                                                setEditingPlan({ ...editingPlan, features: updated });
-                                                            }}
-                                                            className="text-red-400 hover:text-red-300 text-xs px-1 cursor-pointer"
-                                                            title="Remove feature"
-                                                        >
-                                                            ✕
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className="shrink-0 flex items-center justify-end gap-3 pt-3 border-t border-[#2B2323]">
-                                            <button
-                                                type="button"
-                                                onClick={() => setEditingPlan(null)}
-                                                className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white border border-gray-700 cursor-pointer"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                disabled={isSavingPlan}
-                                                className="px-6 py-2 rounded-xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all disabled:opacity-50 cursor-pointer"
-                                            >
-                                                {isSavingPlan ? 'Saving...' : 'Save & Publish Live'}
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 )}
 
+                {/* ------------------------------------------------------------- */}
                 {/* TAB 5: CLIENT BOOKING INQUIRIES */}
+                {/* ------------------------------------------------------------- */}
                 {activeTab === 'inquiries' && (
                     <div className="space-y-6">
-                        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-[#2B2323] pb-4">
+                        <div className="bg-[#161313] p-4 sm:p-6 rounded-3xl border border-[#261E1E] flex items-center justify-between">
                             <div>
-                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <span>📥</span> Client Inquiries & Booking Requests
-                                </h3>
-                                <p className="text-xs text-gray-400 mt-1">
-                                    Direct leads submitted from the Soundscape website contact form.
+                                <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                                    <span>📬</span> Direct Booking Inquiries & Leads
+                                </h2>
+                                <p className="text-gray-400 text-xs mt-1">
+                                    Clients who contacted through the website for wedding DJs, orchestra, Raga Studio recordings, or Academy courses.
                                 </p>
                             </div>
-
-                            <div className="flex items-center gap-2.5 flex-wrap">
-                                {inquiries.length > 0 && (
-                                    <>
-                                        {/* Select All Button */}
-                                        <button
-                                            type="button"
-                                            onClick={handleSelectAllInquiries}
-                                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer border ${
-                                                selectedInquiries.length === inquiries.length && inquiries.length > 0
-                                                    ? 'bg-[#f70776] text-white border-[#f70776] shadow-md shadow-[#f70776]/20'
-                                                    : 'bg-[#1C1717] hover:bg-[#2B2323] text-gray-300 border-[#2B2323]'
-                                            }`}
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedInquiries.length === inquiries.length && inquiries.length > 0}
-                                                onChange={handleSelectAllInquiries}
-                                                className="accent-[#f70776] cursor-pointer rounded"
-                                            />
-                                            <span>
-                                                {selectedInquiries.length === inquiries.length && inquiries.length > 0
-                                                    ? `Deselect All (${selectedInquiries.length})`
-                                                    : `Select All (${selectedInquiries.length}/${inquiries.length})`}
-                                            </span>
-                                        </button>
-
-                                        {/* Delete Selected Button */}
-                                        {selectedInquiries.length > 0 && (
-                                            <button
-                                                type="button"
-                                                onClick={handleBulkDeleteInquiries}
-                                                disabled={isDeletingInquiries}
-                                                className="px-3.5 py-1.5 bg-gradient-to-r from-red-600 to-[#f70776] hover:from-red-700 hover:to-[#c3195d] text-white rounded-xl text-xs font-bold shadow-lg shadow-red-500/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                                            >
-                                                <span>🗑️</span>
-                                                <span>
-                                                    {isDeletingInquiries
-                                                        ? 'Deleting...'
-                                                        : `Delete Selected (${selectedInquiries.length})`}
-                                                </span>
-                                            </button>
-                                        )}
-                                    </>
-                                )}
-
-                                <button
-                                    onClick={fetchInquiries}
-                                    className="px-3 py-1.5 bg-[#1C1717] hover:bg-[#2B2323] border border-[#2B2323] text-gray-300 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                                >
-                                    <span>↻</span> Refresh Inquiries
-                                </button>
-                            </div>
+                            <button
+                                onClick={fetchInquiries}
+                                className="px-4 py-2.5 rounded-2xl bg-[#0E0C0C] border border-[#2B2323] text-gray-300 hover:text-white text-xs font-semibold cursor-pointer"
+                            >
+                                ↻ Refresh
+                            </button>
                         </div>
 
-                        {isLoadingInquiries ? (
-                            <div className="text-center py-20 bg-[#141010] border border-[#c3195d]/20 rounded-2xl">
-                                <div className="w-8 h-8 border-2 border-[#f70776] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                                <p className="text-gray-400 text-xs">Loading inquiries from server...</p>
-                            </div>
-                        ) : inquiries.length === 0 ? (
-                            <div className="text-center py-20 bg-[#141010] border border-[#2B2323] rounded-3xl space-y-3">
-                                <div className="text-4xl">📬</div>
-                                <h4 className="text-base font-bold text-white">No Inquiries Received Yet</h4>
+                        {inquiries.length === 0 ? (
+                            <div className="bg-[#161313] border border-[#261E1E] rounded-3xl p-12 text-center space-y-3">
+                                <span className="text-4xl">📭</span>
+                                <h3 className="text-base font-bold text-white">No Inquiries Received Yet</h3>
                                 <p className="text-xs text-gray-400 max-w-sm mx-auto">
-                                    When clients submit the booking inquiry form on your website, their requests will appear here instantly.
+                                    When clients submit event details or course applications, they will appear here with one-click WhatsApp links.
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                {inquiries.map((inq) => {
-                                    const isSelected = selectedInquiries.includes(inq.id);
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+                                {inquiries.map((inq, idx) => {
+                                    const cleanPhone = (inq.phone || '').replace(/[^0-9]/g, '');
+                                    const waNumber = cleanPhone.startsWith('91') ? cleanPhone : '91' + cleanPhone;
+                                    const waText = encodeURIComponent(`Hello ${inq.name || 'Client'}, thank you for inquiring with SS Audios & DJ Events regarding your ${inq.service || 'event'}! How can we assist you?`);
+
                                     return (
-                                        <div
-                                            key={inq.id}
-                                            className={`rounded-3xl p-6 shadow-xl space-y-4 transition-all border ${
-                                                isSelected
-                                                    ? 'bg-[#221717] border-[#f70776] ring-2 ring-[#f70776]/30'
-                                                    : 'bg-[#1C1717] border-[#2B2323] hover:border-[#f70776]/40'
-                                            }`}
-                                        >
-                                            {/* Header with Checkbox */}
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="flex items-start gap-3">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isSelected}
-                                                        onChange={() => handleToggleSelectInquiry(inq.id)}
-                                                        className="mt-1 w-4 h-4 accent-[#f70776] rounded cursor-pointer"
-                                                    />
-                                                    <div>
-                                                        <h4 className="text-lg font-black text-white">{inq.fullName}</h4>
-                                                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#f70776]/20 text-[#f70776] border border-[#f70776]/30 px-2.5 py-0.5 rounded-full">
-                                                                {inq.corporateName || inq.eventType || 'Corporate Lead'}
-                                                            </span>
-                                                            <span className="text-[11px] text-gray-400">
-                                                                {inq.createdAt ? new Date(inq.createdAt).toLocaleString() : 'Recent'}
-                                                            </span>
-                                                        </div>
-                                                    </div>
+                                        <div key={inq.id || idx} className="bg-[#161313] border border-[#261E1E] rounded-3xl p-5 space-y-3 flex flex-col justify-between shadow-xl">
+                                            <div className="space-y-2.5">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-[#f70776]/20 text-[#f70776] border border-[#f70776]/30">
+                                                        {inq.service || 'Event Booking'}
+                                                    </span>
+                                                    <span className="text-[11px] text-gray-500">
+                                                        {inq.createdAt ? new Date(inq.createdAt).toLocaleDateString() : 'Recent'}
+                                                    </span>
                                                 </div>
-                                                <button
-                                                    onClick={() => handleDeleteInquiry(inq.id)}
-                                                    className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer"
-                                                    title="Delete Inquiry"
-                                                >
-                                                    ✕
-                                                </button>
+
+                                                <h3 className="text-base font-bold text-white">{inq.name}</h3>
+
+                                                <div className="grid grid-cols-2 gap-2 text-xs text-gray-300">
+                                                    <p>📞 <strong className="text-white">{inq.phone}</strong></p>
+                                                    <p>✉️ <span className="text-gray-400 truncate">{inq.email || 'N/A'}</span></p>
+                                                    {inq.eventDate && <p>📅 Date: {inq.eventDate}</p>}
+                                                    {inq.location && <p>📍 Venue: {inq.location}</p>}
+                                                </div>
+
+                                                {inq.message && (
+                                                    <p className="text-xs text-gray-400 bg-[#0E0C0C] p-3 rounded-xl border border-white/5 italic">
+                                                        "{inq.message}"
+                                                    </p>
+                                                )}
                                             </div>
 
-                                            {/* Contact Badges */}
-                                            <div className="flex flex-wrap gap-2 text-xs">
-                                                <a
-                                                    href={`mailto:${inq.email}`}
-                                                    className="px-3 py-1 bg-black/40 border border-gray-800 hover:border-[#f70776]/60 rounded-xl text-gray-300 hover:text-white transition-colors flex items-center gap-1.5"
-                                                >
-                                                    <span>✉️</span> {inq.email}
-                                                </a>
+                                            <div className="pt-3 border-t border-[#261E1E] flex items-center gap-2">
+                                                {cleanPhone && (
+                                                    <a
+                                                        href={`https://wa.me/${waNumber}?text=${waText}`}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                                                    >
+                                                        <span>💬</span> Chat on WhatsApp
+                                                    </a>
+                                                )}
                                                 {inq.phone && (
                                                     <a
                                                         href={`tel:${inq.phone}`}
-                                                        className="px-3 py-1 bg-black/40 border border-gray-800 hover:border-[#f70776]/60 rounded-xl text-gray-300 hover:text-white transition-colors flex items-center gap-1.5"
+                                                        className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold transition-colors"
                                                     >
-                                                        <span>📞</span> {inq.phone}
+                                                        📞 Call
                                                     </a>
                                                 )}
+                                                <button
+                                                    onClick={() => handleDeleteInquiry(inq.id)}
+                                                    className="px-3 py-2 rounded-xl bg-red-950/30 hover:bg-red-900/50 text-red-400 text-xs font-bold transition-colors cursor-pointer"
+                                                    title="Delete inquiry"
+                                                >
+                                                    🗑️
+                                                </button>
                                             </div>
-
-                                                {/* Message Body */}
-                                                {inq.message && (
-                                                    <div className="p-3 bg-black/40 border border-gray-800 rounded-xl text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">
-                                                        {inq.message}
-                                                    </div>
-                                                )}
-
-                                                {/* Action Bar */}
-                                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#2B2323]">
-                                                    {inq.phone && (
-                                                        <a
-                                                            href={`https://wa.me/${inq.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${inq.fullName}, thank you for contacting SS Audios! We received your booking request for ${inq.corporateName || inq.eventType || 'your event'}.`)}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="px-3 py-1.5 bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/40 text-[#25D366] rounded-xl text-xs font-bold transition-all flex items-center gap-1"
-                                                        >
-                                                            <span>💬 WhatsApp</span>
-                                                        </a>
-                                                    )}
-                                                    <a
-                                                        href={`mailto:${inq.email}?subject=${encodeURIComponent(`SS Audios Booking: ${inq.corporateName || inq.eventType || 'Inquiry'}`)}`}
-                                                        className="px-4 py-1.5 bg-[#f70776] hover:bg-[#c3195d] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1"
-                                                    >
-                                                        <span>Reply via Email</span>
-                                                    </a>
-                                                </div>
                                         </div>
                                     );
                                 })}
@@ -2322,8 +1533,868 @@ const MediaManager = ({ onLogout }) => {
                         )}
                     </div>
                 )}
+            </main>
 
+            {/* ------------------------------------------------------------- */}
+            {/* MOBILE FIXED BOTTOM NAVIGATION DOCK */}
+            {/* ------------------------------------------------------------- */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#120F0F]/95 backdrop-blur-xl border-t border-[#241C1C] px-2 py-2 flex items-center justify-around shadow-2xl">
+                <button
+                    onClick={() => setActiveTab('gallery')}
+                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'gallery' ? 'text-[#f70776]' : 'text-gray-400'}`}
+                >
+                    <span className="text-lg">📸</span>
+                    <span className="text-[10px] font-bold">Gallery</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('add')}
+                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'add' ? 'text-[#f70776]' : 'text-gray-400'}`}
+                >
+                    <span className="text-lg">🚀</span>
+                    <span className="text-[10px] font-bold">Upload</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('services')}
+                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'services' ? 'text-[#f70776]' : 'text-gray-400'}`}
+                >
+                    <span className="text-lg">🎛️</span>
+                    <span className="text-[10px] font-bold">Services</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('plans')}
+                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'plans' ? 'text-[#f70776]' : 'text-gray-400'}`}
+                >
+                    <span className="text-lg">🎚️</span>
+                    <span className="text-[10px] font-bold">Plans</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('inquiries')}
+                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'inquiries' ? 'text-[#f70776]' : 'text-gray-400'}`}
+                >
+                    <span className="text-lg">📬</span>
+                    <span className="text-[10px] font-bold">Inquiries</span>
+                </button>
             </div>
+
+            {/* 1. ADD SERVICE MODAL */}
+            {isAddingService && (
+                <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+                    <div className="bg-[#181414] border border-[#2B2323] sm:border-[#f70776]/40 rounded-2xl sm:rounded-3xl max-w-xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+                        {/* Fixed Modal Header */}
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 border-b border-[#2B2323] flex items-center justify-between bg-[#141010]">
+                            <div>
+                                <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-1.5">
+                                    <span>✨</span> Add Service, Studio Offering or Course
+                                </h3>
+                                <p className="text-[10px] text-gray-400">Configure offerings published live to client site.</p>
+                            </div>
+                            <button
+                                onClick={() => setIsAddingService(false)}
+                                className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white text-xs font-bold cursor-pointer"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Quick Presets Bar */}
+                        <div className="shrink-0 px-4 py-1.5 sm:px-5 sm:py-2 bg-[#100D0D] border-b border-[#241C1C] flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none">
+                            <span className="text-[9px] sm:text-[10px] uppercase font-bold text-gray-400 shrink-0">Preset:</span>
+                            <button
+                                type="button"
+                                onClick={() => setNewService({
+                                    title: 'Live DJ & Concert Sound',
+                                    category: 'DJ Events',
+                                    price: 'Starting from ₹15,000',
+                                    image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=600',
+                                    description: 'Electrifying DJ and live remix performance designed to keep the crowd energetic and dance floors packed all night.',
+                                    featuresStr: 'Live Stem Remixing\nFestival-Grade Sound Array\nSynchronized Visuals\nDedicated Sound Tech'
+                                })}
+                                className="px-2 py-0.5 rounded-lg bg-[#181414] hover:bg-[#c3195d]/30 border border-[#2B2323] text-[10px] sm:text-[11px] font-semibold text-gray-300 hover:text-white shrink-0 cursor-pointer"
+                            >
+                                🎧 DJ Event
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setNewService({
+                                    title: 'Raga Studio - Live Tracks & Mixing',
+                                    category: 'Raga Studio',
+                                    price: '₹2,500 / session',
+                                    image: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&q=80&w=600',
+                                    description: 'Zero-latency multi-track acoustic capture, live vocal coaching, tuning, and radio-ready audio production.',
+                                    featuresStr: 'Zero-Latency Monitoring\n16-Channel Simultaneous Tracking\nTube Preamp Saturation\nStem Audio Export'
+                                })}
+                                className="px-2 py-0.5 rounded-lg bg-[#181414] hover:bg-[#c3195d]/30 border border-[#2B2323] text-[10px] sm:text-[11px] font-semibold text-[#f70776] hover:text-white shrink-0 cursor-pointer"
+                            >
+                                🎙️ Raga Studio
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setNewService({
+                                    title: 'Sampoorna Academy - Music Course',
+                                    category: 'Sampoorna Academy',
+                                    price: '₹3,500 / month',
+                                    image: 'https://images.unsplash.com/photo-1520523839898-5071282543e2?auto=format&fit=crop&q=80&w=600',
+                                    description: 'Curriculum-based mentorship in Singing, Keyboard, Flute, or Tabla with individual practice feedback.',
+                                    featuresStr: '1-on-1 Artist Mentorship\nWeekend & Weekday Batches\nLive Studio Simulation\nPerformance Certification'
+                                })}
+                                className="px-2 py-0.5 rounded-lg bg-[#181414] hover:bg-[#c3195d]/30 border border-[#2B2323] text-[10px] sm:text-[11px] font-semibold text-amber-400 hover:text-white shrink-0 cursor-pointer"
+                            >
+                                🎼 Academy Course
+                            </button>
+                        </div>
+
+                        {/* Scrollable Form Body */}
+                        <form onSubmit={handleCreateService} id="createServiceForm" className="flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-5 space-y-3 sm:space-y-4 touch-pan-y">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-300 mb-1">Service / Course Title</label>
+                                    <input
+                                        type="text"
+                                        value={newService.title}
+                                        onChange={e => setNewService({ ...newService, title: e.target.value })}
+                                        placeholder="e.g. Vocal Training or Live DJ"
+                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-300 mb-1">Category / Section</label>
+                                    <select
+                                        value={newService.category || 'DJ Events'}
+                                        onChange={e => setNewService({ ...newService, category: e.target.value })}
+                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    >
+                                        <option value="DJ Events">DJ Events & Sound</option>
+                                        <option value="Raga Studio">Raga Studio</option>
+                                        <option value="Sampoorna Academy">Sampoorna Academy</option>
+                                        <option value="Wedding">Wedding</option>
+                                        <option value="Orchestra">Orchestra</option>
+                                        <option value="Audios&Lightings">Audios & Lightings</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold text-gray-300 mb-1">Price Tag</label>
+                                <input
+                                    type="text"
+                                    value={newService.price}
+                                    onChange={e => setNewService({ ...newService, price: e.target.value })}
+                                    placeholder="e.g. ₹25,000 or ₹2,500 / session"
+                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    required
+                                />
+                            </div>
+
+                            {/* Image Showcase Upload */}
+                            <div>
+                                <label className="block text-[11px] font-bold text-gray-300 mb-1">Showcase Image</label>
+                                <div className="flex items-center gap-2.5">
+                                    {newService.image && (
+                                        <div className="relative w-16 h-12 rounded-xl overflow-hidden shrink-0 border border-white/20 bg-black">
+                                            <img src={newService.image} alt="Preview" className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+                                    <div className="flex-1">
+                                        <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#0E0C0C] hover:bg-[#120F0F] border border-dashed border-gray-600 hover:border-[#f70776] rounded-xl text-[11px] font-semibold text-gray-300 hover:text-white cursor-pointer transition-all">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                disabled={isUploadingServiceImage}
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    try {
+                                                        setIsUploadingServiceImage(true);
+                                                        const url = await handleUploadMediaFile(file);
+                                                        setNewService(prev => ({ ...prev, image: url }));
+                                                        showNotification('Image uploaded successfully!');
+                                                    } catch (err) {
+                                                        alert('Failed to upload image: ' + err.message);
+                                                    } finally {
+                                                        setIsUploadingServiceImage(false);
+                                                    }
+                                                }}
+                                            />
+                                            {isUploadingServiceImage ? (
+                                                <span className="text-[#f70776] font-bold">Uploading image...</span>
+                                            ) : (
+                                                <>
+                                                    <span>📁</span>
+                                                    <span>{newService.image ? 'Change Image from Files' : 'Upload Image from Files'}</span>
+                                                </>
+                                            )}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold text-gray-300 mb-1">Service Description</label>
+                                <textarea
+                                    rows="2"
+                                    value={newService.description}
+                                    onChange={e => setNewService({ ...newService, description: e.target.value })}
+                                    placeholder="Describe the audio performance, curriculum, or studio gear..."
+                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold text-gray-300 mb-1">Key Features (One item per line)</label>
+                                <textarea
+                                    rows="3"
+                                    value={newService.featuresStr}
+                                    onChange={e => setNewService({ ...newService, featuresStr: e.target.value })}
+                                    placeholder="Live Stem Remixing&#10;Festival-Grade Sound Array&#10;Synchronized Visuals"
+                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                />
+                            </div>
+                        </form>
+
+                        {/* Fixed Sticky Action Bar */}
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 bg-[#141010] border-t border-[#2B2323] flex items-center justify-end gap-2.5 sm:gap-3 z-10">
+                            <button
+                                type="button"
+                                onClick={() => setIsAddingService(false)}
+                                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white border border-gray-700 cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                form="createServiceForm"
+                                disabled={isSavingService || isUploadingServiceImage}
+                                className="px-5 py-2 rounded-xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all disabled:opacity-50 cursor-pointer"
+                            >
+                                {isSavingService ? 'Saving...' : 'Add & Publish Live'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 2. EDIT SERVICE MODAL */}
+            {editingService && (
+                <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+                    <div className="bg-[#181414] border border-[#2B2323] sm:border-[#f70776]/40 rounded-2xl sm:rounded-3xl max-w-xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+                        {/* Fixed Header */}
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 border-b border-[#2B2323] flex items-center justify-between bg-[#141010]">
+                            <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-1.5">
+                                <span>✏️</span> Edit Offering: {editingService.title}
+                            </h3>
+                            <button
+                                onClick={() => setEditingService(null)}
+                                className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white text-xs font-bold cursor-pointer"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Scrollable Form Body */}
+                        <form onSubmit={handleSaveService} id="editServiceForm" className="flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-5 space-y-3 sm:space-y-4 touch-pan-y">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-300 mb-1">Service Title</label>
+                                    <input
+                                        type="text"
+                                        value={editingService.title}
+                                        onChange={e => setEditingService({ ...editingService, title: e.target.value })}
+                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-300 mb-1">Category</label>
+                                    <select
+                                        value={editingService.category || 'DJ Events'}
+                                        onChange={e => setEditingService({ ...editingService, category: e.target.value })}
+                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    >
+                                        <option value="DJ Events">DJ Events & Sound</option>
+                                        <option value="Raga Studio">Raga Studio</option>
+                                        <option value="Sampoorna Academy">Sampoorna Academy</option>
+                                        <option value="Wedding">Wedding</option>
+                                        <option value="Orchestra">Orchestra</option>
+                                        <option value="Audios&Lightings">Audios & Lightings</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold text-gray-300 mb-1">Price Tag</label>
+                                <input
+                                    type="text"
+                                    value={editingService.price}
+                                    onChange={e => setEditingService({ ...editingService, price: e.target.value })}
+                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    required
+                                />
+                            </div>
+
+                            {/* Image Showcase Upload */}
+                            <div>
+                                <label className="block text-[11px] font-bold text-gray-300 mb-1">Showcase Image</label>
+                                <div className="flex items-center gap-2.5">
+                                    {editingService.image && (
+                                        <div className="relative w-16 h-12 rounded-xl overflow-hidden shrink-0 border border-white/20 bg-black">
+                                            <img src={editingService.image} alt="Preview" className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+                                    <div className="flex-1">
+                                        <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#0E0C0C] hover:bg-[#120F0F] border border-dashed border-gray-600 hover:border-[#f70776] rounded-xl text-[11px] font-semibold text-gray-300 hover:text-white cursor-pointer transition-all">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                disabled={isUploadingServiceImage}
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    try {
+                                                        setIsUploadingServiceImage(true);
+                                                        const url = await handleUploadMediaFile(file);
+                                                        setEditingService(prev => ({ ...prev, image: url }));
+                                                        showNotification('Image updated successfully!');
+                                                    } catch (err) {
+                                                        alert('Failed to upload image: ' + err.message);
+                                                    } finally {
+                                                        setIsUploadingServiceImage(false);
+                                                    }
+                                                }}
+                                            />
+                                            {isUploadingServiceImage ? (
+                                                <span className="text-[#f70776] font-bold">Uploading image...</span>
+                                            ) : (
+                                                <>
+                                                    <span>📁</span>
+                                                    <span>Change Image from Files</span>
+                                                </>
+                                            )}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold text-gray-300 mb-1">Service Description</label>
+                                <textarea
+                                    rows="2"
+                                    value={editingService.description}
+                                    onChange={e => setEditingService({ ...editingService, description: e.target.value })}
+                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold text-gray-300 mb-1">Features (One per line)</label>
+                                <textarea
+                                    rows="3"
+                                    value={editingService.featuresStr || (editingService.features || []).join('\n')}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        const feats = val.split('\n').filter(s => s.trim().length > 0);
+                                        setEditingService({ ...editingService, featuresStr: val, features: feats });
+                                    }}
+                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                />
+                            </div>
+                        </form>
+
+                        {/* Fixed Sticky Action Bar */}
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 bg-[#141010] border-t border-[#2B2323] flex items-center justify-end gap-2.5 sm:gap-3 z-10">
+                            <button
+                                type="button"
+                                onClick={() => setEditingService(null)}
+                                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white border border-gray-700 cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                form="editServiceForm"
+                                disabled={isSavingService || isUploadingServiceImage}
+                                className="px-5 py-2 rounded-xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all disabled:opacity-50 cursor-pointer"
+                            >
+                                {isSavingService ? 'Saving...' : 'Save & Publish Live'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 3. ADD PRICING PLAN MODAL */}
+            {isAddingPlan && (
+                <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+                    <div className="bg-[#181414] border border-[#2B2323] sm:border-[#f70776]/40 rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 border-b border-[#2B2323] flex items-center justify-between bg-[#141010]">
+                            <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-1.5">
+                                <span>✨</span> Add New Pricing Package
+                            </h3>
+                            <button
+                                onClick={() => setIsAddingPlan(false)}
+                                className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white text-xs font-bold cursor-pointer"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleCreatePlan} id="createPlanForm" className="flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-5 space-y-3 sm:space-y-4 touch-pan-y">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-300 mb-1">Plan Name</label>
+                                    <input
+                                        type="text"
+                                        value={newPlan.name}
+                                        onChange={e => setNewPlan({ ...newPlan, name: e.target.value })}
+                                        placeholder="e.g. VIP Headliner Concert"
+                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-300 mb-1">Badge Tag</label>
+                                    <input
+                                        type="text"
+                                        value={newPlan.badge}
+                                        onChange={e => setNewPlan({ ...newPlan, badge: e.target.value })}
+                                        placeholder="e.g. MOST POPULAR, VIP, FESTIVAL"
+                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-300 mb-1">Price</label>
+                                    <input
+                                        type="text"
+                                        value={newPlan.price || newPlan.monthlyPrice || ''}
+                                        onChange={e => setNewPlan({ ...newPlan, price: e.target.value, monthlyPrice: e.target.value })}
+                                        placeholder="e.g. ₹25,000 or $499"
+                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-300 mb-1">Theme Accent</label>
+                                    <select
+                                        value={newPlan.theme || 'standard'}
+                                        onChange={e => setNewPlan({ ...newPlan, theme: e.target.value })}
+                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    >
+                                        <option value="standard">Standard Neon</option>
+                                        <option value="silver">Silver Glow</option>
+                                        <option value="gold">Gold VIP</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold text-gray-300 mb-1">Description</label>
+                                <textarea
+                                    rows="2"
+                                    value={newPlan.desc}
+                                    onChange={e => setNewPlan({ ...newPlan, desc: e.target.value })}
+                                    placeholder="Brief overview of what this tier delivers..."
+                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    required
+                                />
+                            </div>
+
+                            {/* Media Section */}
+                            <div className="p-3 bg-[#0E0C0C] border border-[#2B2323] rounded-2xl space-y-2">
+                                <label className="block text-[11px] font-bold text-white flex items-center justify-between">
+                                    <span>🎬 Showcase Media Feeds (Videos & Images)</span>
+                                    <span className="text-[#f70776] text-[10px]">{(newPlan.videos || []).length} Configured</span>
+                                </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="url"
+                                        value={planMediaUrlInput}
+                                        onChange={e => setPlanMediaUrlInput(e.target.value)}
+                                        placeholder="Paste image/video URL..."
+                                        className="flex-1 px-3 py-1.5 bg-black/60 border border-gray-700 rounded-xl text-xs text-white"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (!planMediaUrlInput.trim()) return;
+                                            const current = (newPlan.videos || []).filter(Boolean);
+                                            setNewPlan(prev => ({
+                                                ...prev,
+                                                videos: [...current, planMediaUrlInput.trim()],
+                                                videoUrl: current[0] || planMediaUrlInput.trim()
+                                            }));
+                                            setPlanMediaUrlInput('');
+                                        }}
+                                        className="px-3 py-1.5 bg-[#f70776] text-white rounded-xl text-xs font-bold cursor-pointer"
+                                    >
+                                        + Add
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Features toggles */}
+                            <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-[11px] font-bold text-gray-300">Feature Inclusions</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const feats = newPlan.features || [];
+                                            setNewPlan({
+                                                ...newPlan,
+                                                features: [...feats, { text: 'New Feature Item', included: true }]
+                                            });
+                                        }}
+                                        className="text-[10px] text-[#f70776] font-bold hover:underline cursor-pointer"
+                                    >
+                                        + Add Feature
+                                    </button>
+                                </div>
+
+                                <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                                    {newPlan.features?.map((feat, fIdx) => (
+                                        <div key={fIdx} className="flex items-center gap-2 bg-[#0E0C0C] p-1.5 rounded-xl border border-[#2B2323]">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const updated = [...newPlan.features];
+                                                    updated[fIdx].included = !updated[fIdx].included;
+                                                    setNewPlan({ ...newPlan, features: updated });
+                                                }}
+                                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold cursor-pointer ${feat.included ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-500'}`}
+                                            >
+                                                {feat.included ? 'Included' : 'Excluded'}
+                                            </button>
+                                            <input
+                                                type="text"
+                                                value={feat.text}
+                                                onChange={e => {
+                                                    const updated = [...newPlan.features];
+                                                    updated[fIdx].text = e.target.value;
+                                                    setNewPlan({ ...newPlan, features: updated });
+                                                }}
+                                                className="flex-1 bg-transparent border-none text-xs text-white focus:outline-none"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const updated = newPlan.features.filter((_, idx) => idx !== fIdx);
+                                                    setNewPlan({ ...newPlan, features: updated });
+                                                }}
+                                                className="text-red-400 hover:text-red-300 text-xs px-1 cursor-pointer"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </form>
+
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 bg-[#141010] border-t border-[#2B2323] flex items-center justify-end gap-2.5 sm:gap-3 z-10">
+                            <button
+                                type="button"
+                                onClick={() => setIsAddingPlan(false)}
+                                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white border border-gray-700 cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                form="createPlanForm"
+                                disabled={isSavingPlan}
+                                className="px-5 py-2 rounded-xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all disabled:opacity-50 cursor-pointer"
+                            >
+                                {isSavingPlan ? 'Saving...' : 'Add & Publish Tier'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 4. EDIT PRICING PLAN MODAL */}
+            {editingPlan && (
+                <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+                    <div className="bg-[#181414] border border-[#2B2323] sm:border-[#f70776]/40 rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 border-b border-[#2B2323] flex items-center justify-between bg-[#141010]">
+                            <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-1.5">
+                                <span>🎚️</span> Edit Package: {editingPlan.name}
+                            </h3>
+                            <button
+                                onClick={() => setEditingPlan(null)}
+                                className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white text-xs font-bold cursor-pointer"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSavePlan} id="editPlanForm" className="flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-5 space-y-3 sm:space-y-4 touch-pan-y">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-300 mb-1">Plan Name</label>
+                                    <input
+                                        type="text"
+                                        value={editingPlan.name}
+                                        onChange={e => setEditingPlan({ ...editingPlan, name: e.target.value })}
+                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-300 mb-1">Badge</label>
+                                    <input
+                                        type="text"
+                                        value={editingPlan.badge}
+                                        onChange={e => setEditingPlan({ ...editingPlan, badge: e.target.value })}
+                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-300 mb-1">Price</label>
+                                    <input
+                                        type="text"
+                                        value={editingPlan.price || editingPlan.monthlyPrice || ''}
+                                        onChange={e => setEditingPlan({ ...editingPlan, price: e.target.value, monthlyPrice: e.target.value })}
+                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-300 mb-1">Theme</label>
+                                    <select
+                                        value={editingPlan.theme || 'standard'}
+                                        onChange={e => setEditingPlan({ ...editingPlan, theme: e.target.value })}
+                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    >
+                                        <option value="standard">Standard Neon</option>
+                                        <option value="silver">Silver Glow</option>
+                                        <option value="gold">Gold VIP</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold text-gray-300 mb-1">Description</label>
+                                <textarea
+                                    rows="2"
+                                    value={editingPlan.desc}
+                                    onChange={e => setEditingPlan({ ...editingPlan, desc: e.target.value })}
+                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    required
+                                />
+                            </div>
+
+                            {/* Media Feeds */}
+                            <div className="p-3 bg-[#0E0C0C] border border-[#2B2323] rounded-2xl space-y-2">
+                                <label className="block text-[11px] font-bold text-white flex items-center justify-between">
+                                    <span>🎬 Showcase Media Feeds</span>
+                                    <span className="text-[#f70776] text-[10px]">{(editingPlan.videos || []).length} Configured</span>
+                                </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="url"
+                                        value={editPlanMediaUrlInput}
+                                        onChange={e => setEditPlanMediaUrlInput(e.target.value)}
+                                        placeholder="Paste image/video URL..."
+                                        className="flex-1 px-3 py-1.5 bg-black/60 border border-gray-700 rounded-xl text-xs text-white"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (!editPlanMediaUrlInput.trim()) return;
+                                            const current = (editingPlan.videos || []).filter(Boolean);
+                                            setEditingPlan(prev => ({
+                                                ...prev,
+                                                videos: [...current, editPlanMediaUrlInput.trim()],
+                                                videoUrl: current[0] || editPlanMediaUrlInput.trim()
+                                            }));
+                                            setEditPlanMediaUrlInput('');
+                                        }}
+                                        className="px-3 py-1.5 bg-[#f70776] text-white rounded-xl text-xs font-bold cursor-pointer"
+                                    >
+                                        + Add
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Features toggles */}
+                            <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-[11px] font-bold text-gray-300">Feature Inclusions</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const feats = editingPlan.features || [];
+                                            setEditingPlan({
+                                                ...editingPlan,
+                                                features: [...feats, { text: 'New Feature Item', included: true }]
+                                            });
+                                        }}
+                                        className="text-[10px] text-[#f70776] font-bold hover:underline cursor-pointer"
+                                    >
+                                        + Add Feature
+                                    </button>
+                                </div>
+
+                                <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                                    {editingPlan.features?.map((feat, fIdx) => (
+                                        <div key={fIdx} className="flex items-center gap-2 bg-[#0E0C0C] p-1.5 rounded-xl border border-[#2B2323]">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const updated = [...editingPlan.features];
+                                                    updated[fIdx].included = !updated[fIdx].included;
+                                                    setEditingPlan({ ...editingPlan, features: updated });
+                                                }}
+                                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold cursor-pointer ${feat.included ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-500'}`}
+                                            >
+                                                {feat.included ? 'Included' : 'Excluded'}
+                                            </button>
+                                            <input
+                                                type="text"
+                                                value={feat.text}
+                                                onChange={e => {
+                                                    const updated = [...editingPlan.features];
+                                                    updated[fIdx].text = e.target.value;
+                                                    setEditingPlan({ ...editingPlan, features: updated });
+                                                }}
+                                                className="flex-1 bg-transparent border-none text-xs text-white focus:outline-none"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const updated = editingPlan.features.filter((_, idx) => idx !== fIdx);
+                                                    setEditingPlan({ ...editingPlan, features: updated });
+                                                }}
+                                                className="text-red-400 hover:text-red-300 text-xs px-1 cursor-pointer"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </form>
+
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 bg-[#141010] border-t border-[#2B2323] flex items-center justify-end gap-2.5 sm:gap-3 z-10">
+                            <button
+                                type="button"
+                                onClick={() => setEditingPlan(null)}
+                                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white border border-gray-700 cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                form="editPlanForm"
+                                disabled={isSavingPlan}
+                                className="px-5 py-2 rounded-xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all disabled:opacity-50 cursor-pointer"
+                            >
+                                {isSavingPlan ? 'Saving...' : 'Save & Publish Live'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 5. FULL PREVIEW MEDIA MODAL */}
+            {previewMediaModal && (
+                <div
+                    onClick={() => setPreviewMediaModal(null)}
+                    className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 cursor-pointer"
+                >
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        className="relative max-w-4xl w-full bg-[#181414] border border-[#2B2323] rounded-3xl overflow-hidden shadow-2xl space-y-3 p-4"
+                    >
+                        <div className="flex items-center justify-between pb-2 border-b border-[#2B2323]">
+                            <div>
+                                <h3 className="text-sm font-bold text-white">{previewMediaModal.title || 'Media Asset'}</h3>
+                                <span className="text-[11px] text-[#f70776]">{previewMediaModal.category}</span>
+                            </div>
+                            <button
+                                onClick={() => setPreviewMediaModal(null)}
+                                className="w-8 h-8 rounded-full bg-white/10 text-white font-bold flex items-center justify-center"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="w-full max-h-[70vh] rounded-2xl overflow-hidden bg-black flex items-center justify-center">
+                            {isImageMedia(previewMediaModal.url || previewMediaModal.key) ? (
+                                <img src={previewMediaModal.url} alt="Preview" className="max-h-[70vh] w-auto object-contain" />
+                            ) : (
+                                <video src={previewMediaModal.url} controls autoPlay className="max-h-[70vh] w-full object-contain" />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 6. EDIT MEDIA MODAL */}
+            {editingMedia && (
+                <div className="fixed inset-0 z-[110] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+                    <div className="bg-[#181414] border border-[#2B2323] rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-[#2B2323] pb-3">
+                            <h3 className="text-base font-bold text-white">Edit Media Tag</h3>
+                            <button onClick={() => setEditingMedia(null)} className="text-gray-400 hover:text-white">✕</button>
+                        </div>
+
+                        <form onSubmit={handleUpdateMedia} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-300 mb-1">Title</label>
+                                <input
+                                    type="text"
+                                    value={editingMedia.title || ''}
+                                    onChange={e => setEditingMedia({ ...editingMedia, title: e.target.value })}
+                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs text-white"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-300 mb-1">Category</label>
+                                <select
+                                    value={editingMedia.category || 'Wedding'}
+                                    onChange={e => setEditingMedia({ ...editingMedia, category: e.target.value })}
+                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs text-white"
+                                >
+                                    {DEFAULT_CATEGORIES.map((cat, i) => (
+                                        <option key={i} value={cat}>{cat}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingMedia(null)}
+                                    className="px-4 py-2 rounded-xl text-xs text-gray-400 border border-gray-700"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-5 py-2 bg-[#f70776] text-white font-bold text-xs rounded-xl"
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
