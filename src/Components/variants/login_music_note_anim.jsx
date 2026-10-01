@@ -42,7 +42,7 @@ const LoginPageMusicNoteAnim = ({ onLoginSuccess }) => {
         setNoteAnimState('success_dropping');
         setError('');
 
-        // Music symbol falls, resonates in signature pink #f70776 and opens Admin Panel
+        // Music symbol falls, resonates in signature pink #FF5D16 and opens Admin Panel
         setTimeout(() => {
             if (onLoginSuccess) {
                 onLoginSuccess(formData);
@@ -73,10 +73,10 @@ const LoginPageMusicNoteAnim = ({ onLoginSuccess }) => {
     };
 
     return (
-        <div className="relative min-h-screen bg-[#141010] flex items-center justify-center p-4 sm:p-6 font-sans overflow-hidden">
+        <div className="relative min-h-screen bg-[#000000] flex items-center justify-center p-4 sm:p-6 font-sans overflow-hidden">
             {/* Custom Music Note Drop, Resonate & Shatter Keyframes */}
             <style>{`
-                /* SUCCESS DROP & BOUNCE IN BRAND PINK #f70776 */
+                /* SUCCESS DROP & BOUNCE IN BRAND PINK #FF5D16 */
                 @keyframes noteDropSuccessPink {
                     0% {
                         transform: translateY(-90px) scale(0.6) rotate(-12deg);
@@ -95,7 +95,7 @@ const LoginPageMusicNoteAnim = ({ onLoginSuccess }) => {
                     100% {
                         transform: translateY(8px) scale(1.2);
                         opacity: 1;
-                        filter: drop-shadow(0 0 35px #f70776) brightness(1.3);
+                        filter: drop-shadow(0 0 35px #FF5D16) brightness(1.3);
                     }
                 }
 
@@ -197,11 +197,11 @@ const LoginPageMusicNoteAnim = ({ onLoginSuccess }) => {
             </div>
 
             {/* Ambient vignette and glow */}
-            <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#141010] via-transparent to-[#141010]/80 pointer-events-none" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#f70776]/10 rounded-full blur-[140px] pointer-events-none" />
+            <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#000000] via-transparent to-[#000000]/80 pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FF5D16]/10 rounded-full blur-[140px] pointer-events-none" />
 
             {/* Main Login Card - Fixed Dimensions to Prevent Jumping/Resizing */}
-            <div className="relative z-10 bg-[#1C1717]/95 backdrop-blur-xl border border-[#2B2323] hover:border-[#f70776]/40 transition-colors duration-500 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col md:flex-row w-full max-w-4xl min-h-[560px] md:h-[580px]">
+            <div className="relative z-10 bg-[#0c0c0c]/95 backdrop-blur-xl border border-[#222222] hover:border-[#FF5D16]/40 transition-colors duration-500 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col md:flex-row w-full max-w-4xl min-h-[560px] md:h-[580px]">
 
                 {/* Left Side: Visual / Hero Section */}
                 <div className="relative md:w-1/2 min-h-[220px] md:min-h-full flex flex-col justify-between p-6 sm:p-8 overflow-hidden shrink-0">
@@ -211,46 +211,46 @@ const LoginPageMusicNoteAnim = ({ onLoginSuccess }) => {
                             backgroundImage: `url('https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=1000&auto=format&fit=crop')`
                         }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1C1717] via-[#1C1717]/65 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0c] via-[#0c0c0c]/65 to-transparent" />
 
                     <div className="relative z-10 flex justify-between items-center">
-                        <span className="text-xs font-bold uppercase tracking-widest text-[#f70776] bg-[#141010]/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-lg">
+                        <span className="text-xs font-bold uppercase tracking-widest text-[#FF5D16] bg-[#000000]/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-lg">
                             Audio & Visual Experience
                         </span>
                     </div>
 
-                    <div className="relative z-10 bg-[#141010]/80 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-xl">
+                    <div className="relative z-10 bg-[#000000]/80 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-xl">
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="w-2 h-2 rounded-full bg-[#f70776] animate-pulse" />
+                            <span className="w-2 h-2 rounded-full bg-[#FF5D16] animate-pulse" />
                             <h4 className="text-white text-sm font-bold">Immersive Audio Hub</h4>
                         </div>
-                        <p className="text-[#BDB2B2] text-xs leading-relaxed font-light">
+                        <p className="text-[#B5B5B5] text-xs leading-relaxed font-light">
                             Manage soundscapes, live stage visuals, and media assets in real time.
                         </p>
                     </div>
                 </div>
 
                 {/* Right Side: Form Container with Locked Proportions */}
-                <div className="relative md:w-1/2 bg-[#1C1717]/95 p-8 sm:p-10 flex flex-col justify-between shrink-0 overflow-hidden border-t md:border-t-0 md:border-l border-[#2B2323]">
+                <div className="relative md:w-1/2 bg-[#0c0c0c]/95 p-8 sm:p-10 flex flex-col justify-between shrink-0 overflow-hidden border-t md:border-t-0 md:border-l border-[#222222]">
                     
                     {/* Top Header Row */}
                     <div>
                         <div className="flex justify-between items-center mb-6">
                             <div className="flex items-center">
                                 <img
-                                    src="/SS.svg"
+                                    src="/ss-audios-logo.png"
                                     alt="SS Audios"
-                                    className="h-7 sm:h-8 w-auto object-contain drop-shadow-[0_0_12px_rgba(247,7,118,0.7)]"
+                                    className="h-7 sm:h-8 w-auto object-contain drop-shadow-[0_0_12px_rgba(255, 93, 22,0.7)]"
                                 />
                             </div>
-                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#A69B9B] px-2.5 py-1 rounded-full bg-[#141010] border border-[#2B2323]">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9E9E9E] px-2.5 py-1 rounded-full bg-[#000000] border border-[#222222]">
                                 Admin Portal
                             </span>
                         </div>
 
                         <div>
                             <h2 className="text-2xl font-extrabold text-white mb-1">Welcome Back</h2>
-                            <p className="text-[#A69B9B] text-xs font-light">Enter credentials to unlock Soundscape Studio</p>
+                            <p className="text-[#9E9E9E] text-xs font-light">Enter credentials to unlock Soundscape Studio</p>
                         </div>
                     </div>
 
@@ -268,10 +268,10 @@ const LoginPageMusicNoteAnim = ({ onLoginSuccess }) => {
 
                         {noteAnimState === 'success_dropping' && (
                             <div
-                                className="w-full py-2 px-3 bg-[#f70776]/15 border border-[#f70776] text-[#FAF6F6] text-xs rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(247,7,118,0.4)] animate-pulse"
+                                className="w-full py-2 px-3 bg-[#FF5D16]/15 border border-[#FF5D16] text-[#FDFDFC] text-xs rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(255, 93, 22,0.4)] animate-pulse"
                             >
-                                <span className="text-sm text-[#f70776]">🎵</span>
-                                <span className="tracking-wide uppercase font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-[#FAF6F6] to-[#f70776]">
+                                <span className="text-sm text-[#FF5D16]">🎵</span>
+                                <span className="tracking-wide uppercase font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-[#FDFDFC] to-[#FF5D16]">
                                     Music Resonated • Opening Admin Panel...
                                 </span>
                             </div>
@@ -281,7 +281,7 @@ const LoginPageMusicNoteAnim = ({ onLoginSuccess }) => {
                     {/* Form Controls */}
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-[#A69B9B] mb-1.5">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-[#9E9E9E] mb-1.5">
                                 Email Address
                             </label>
                             <input
@@ -290,18 +290,18 @@ const LoginPageMusicNoteAnim = ({ onLoginSuccess }) => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 placeholder="admin@soundscape.io"
-                                className={`w-full px-4 py-3 text-sm rounded-xl bg-[#141010] border text-white placeholder-[#6b6161] focus:outline-none transition-all ${
+                                className={`w-full px-4 py-3 text-sm rounded-xl bg-[#000000] border text-white placeholder-[#6B6B6B] focus:outline-none transition-all ${
                                     error
                                         ? 'border-red-500 ring-1 ring-red-500/40 bg-red-950/20'
                                         : noteAnimState === 'success_dropping'
-                                        ? 'border-[#f70776] ring-1 ring-[#f70776]/50 bg-[#f70776]/10'
-                                        : 'border-[#2B2323] focus:border-[#f70776] focus:ring-1 focus:ring-[#f70776]'
+                                        ? 'border-[#FF5D16] ring-1 ring-[#FF5D16]/50 bg-[#FF5D16]/10'
+                                        : 'border-[#222222] focus:border-[#FF5D16] focus:ring-1 focus:ring-[#FF5D16]'
                                 }`}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-[#A69B9B] mb-1.5">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-[#9E9E9E] mb-1.5">
                                 Password
                             </label>
                             <input
@@ -310,12 +310,12 @@ const LoginPageMusicNoteAnim = ({ onLoginSuccess }) => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 placeholder="••••••••"
-                                className={`w-full px-4 py-3 text-sm rounded-xl bg-[#141010] border text-white placeholder-[#6b6161] focus:outline-none transition-all ${
+                                className={`w-full px-4 py-3 text-sm rounded-xl bg-[#000000] border text-white placeholder-[#6B6B6B] focus:outline-none transition-all ${
                                     error
                                         ? 'border-red-500 ring-1 ring-red-500/40 bg-red-950/20'
                                         : noteAnimState === 'success_dropping'
-                                        ? 'border-[#f70776] ring-1 ring-[#f70776]/50 bg-[#f70776]/10'
-                                        : 'border-[#2B2323] focus:border-[#f70776] focus:ring-1 focus:ring-[#f70776]'
+                                        ? 'border-[#FF5D16] ring-1 ring-[#FF5D16]/50 bg-[#FF5D16]/10'
+                                        : 'border-[#222222] focus:border-[#FF5D16] focus:ring-1 focus:ring-[#FF5D16]'
                                 }`}
                             />
                         </div>
@@ -325,8 +325,8 @@ const LoginPageMusicNoteAnim = ({ onLoginSuccess }) => {
                             disabled={isLoading || noteAnimState === 'success_dropping'}
                             className={`w-full py-3.5 mt-1 font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all duration-300 transform cursor-pointer flex items-center justify-center gap-2 ${
                                 noteAnimState === 'success_dropping'
-                                    ? 'bg-gradient-to-r from-[#c3195d] via-[#f70776] to-[#ff007f] text-white shadow-[#f70776]/50 scale-[1.02]'
-                                    : 'bg-[#f70776] hover:bg-[#c3195d] text-white shadow-[#f70776]/25 hover:-translate-y-0.5 active:translate-y-0'
+                                    ? 'bg-gradient-to-r from-[#E04B0A] via-[#FF5D16] to-[#FF7A3D] text-white shadow-[#FF5D16]/50 scale-[1.02]'
+                                    : 'bg-[#FF5D16] hover:bg-[#E04B0A] text-white shadow-[#FF5D16]/25 hover:-translate-y-0.5 active:translate-y-0'
                             } disabled:opacity-75`}
                         >
                             {noteAnimState === 'success_dropping' ? (
@@ -351,22 +351,22 @@ const LoginPageMusicNoteAnim = ({ onLoginSuccess }) => {
                     {noteAnimState !== 'idle' && (
                         <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
                             
-                            {/* 1. SUCCESS: MUSIC SYMBOL DROPS IN BRAND PINK #f70776 & RESONATES */}
+                            {/* 1. SUCCESS: MUSIC SYMBOL DROPS IN BRAND PINK #FF5D16 & RESONATES */}
                             {noteAnimState === 'success_dropping' && (
                                 <div className="relative flex items-center justify-center">
-                                    {/* Concentric Sonic Rings in Signature Magenta #f70776 */}
+                                    {/* Concentric Sonic Rings in Signature Magenta #FF5D16 */}
                                     <div
-                                        className="absolute w-28 h-28 rounded-full border-2 border-[#f70776] shadow-[0_0_30px_#f70776]"
+                                        className="absolute w-28 h-28 rounded-full border-2 border-[#FF5D16] shadow-[0_0_30px_#FF5D16]"
                                         style={{ animation: 'sonicRingPulsePink 0.9s ease-out forwards', animationDelay: '0.35s' }}
                                     />
                                     <div
-                                        className="absolute w-44 h-44 rounded-full border border-[#c3195d] shadow-[0_0_40px_#c3195d]"
+                                        className="absolute w-44 h-44 rounded-full border border-[#E04B0A] shadow-[0_0_40px_#E04B0A]"
                                         style={{ animation: 'sonicRingPulsePink 1.1s ease-out forwards', animationDelay: '0.5s' }}
                                     />
 
-                                    {/* Dropping & Bouncing Neon Music Symbol in Website Pink #f70776 */}
+                                    {/* Dropping & Bouncing Neon Music Symbol in Website Pink #FF5D16 */}
                                     <div
-                                        className="relative filter drop-shadow-[0_0_25px_#f70776]"
+                                        className="relative filter drop-shadow-[0_0_25px_#FF5D16]"
                                         style={{ animation: 'noteDropSuccessPink 0.85s cubic-bezier(0.25, 1, 0.5, 1) forwards' }}
                                     >
                                         <svg width="68" height="68" viewBox="0 0 24 24" fill="none">
@@ -381,12 +381,12 @@ const LoginPageMusicNoteAnim = ({ onLoginSuccess }) => {
                                             <defs>
                                                 <linearGradient id="soundscapeBrandGrad" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
                                                     <stop stopColor="#FFFFFF" />
-                                                    <stop offset="0.4" stopColor="#F70776" />
-                                                    <stop offset="1" stopColor="#C3195D" />
+                                                    <stop offset="0.4" stopColor="#FF5D16" />
+                                                    <stop offset="1" stopColor="#E04B0A" />
                                                 </linearGradient>
                                                 <linearGradient id="soundscapeBrandFill" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
-                                                    <stop stopColor="#F70776" stopOpacity="0.9" />
-                                                    <stop offset="1" stopColor="#C3195D" stopOpacity="0.6" />
+                                                    <stop stopColor="#FF5D16" stopOpacity="0.9" />
+                                                    <stop offset="1" stopColor="#E04B0A" stopOpacity="0.6" />
                                                 </linearGradient>
                                             </defs>
                                         </svg>

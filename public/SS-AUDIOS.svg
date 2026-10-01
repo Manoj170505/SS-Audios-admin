@@ -4,22 +4,22 @@
   <defs>
     <style>
       .st0 {
-        fill: #faf6f6;
+        fill: #FDFDFC;
         font-family: GillSansMT, 'Gill Sans MT';
         font-size: 3.89px;
         letter-spacing: .05em;
-        stroke: #faf6f6;
+        stroke: #FDFDFC;
         stroke-linejoin: round;
         stroke-width: .15px;
       }
 
       .st1 {
-        fill: #f70776;
+        fill: #FF5D16;
         stroke-width: .1px;
       }
 
       .st1, .st2 {
-        stroke: #f70776;
+        stroke: #FF5D16;
         stroke-miterlimit: 10;
       }
 

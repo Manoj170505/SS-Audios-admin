@@ -10,12 +10,12 @@
       }
 
       .st0, .st1 {
-        stroke: #f70776;
+        stroke: #FF5D16;
         stroke-miterlimit: 10;
       }
 
       .st1 {
-        fill: #f70776;
+        fill: #FF5D16;
         stroke-width: .29px;
       }
     </style>

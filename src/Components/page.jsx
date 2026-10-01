@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ss-audios-backend-production.up.railway.app/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ss-audios-backend.vercel.app/api';
 
 const DEFAULT_CATEGORIES = [
     "Wedding",
@@ -641,10 +641,10 @@ const MediaManager = ({ onLogout }) => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0E0C0C] text-gray-100 flex flex-col font-sans pb-24 md:pb-10 selection:bg-[#f70776] selection:text-white">
+        <div className="min-h-screen bg-[#000000] text-gray-100 flex flex-col font-sans pb-24 md:pb-10 selection:bg-[#FF5D16] selection:text-white">
             {/* Custom Background Glow */}
             <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-                <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#f70776]/10 rounded-full blur-[140px] transform -translate-y-1/2"></div>
+                <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#FF5D16]/10 rounded-full blur-[140px] transform -translate-y-1/2"></div>
                 <div className="absolute bottom-1/3 right-10 w-[450px] h-[450px] bg-[#FF8A00]/10 rounded-full blur-[140px]"></div>
                 <div className="absolute top-1/2 left-10 w-[300px] h-[300px] bg-[#6366F1]/10 rounded-full blur-[120px]"></div>
             </div>
@@ -652,7 +652,7 @@ const MediaManager = ({ onLogout }) => {
             {/* FLOATING TOAST NOTIFICATION */}
             {notification && (
                 <div className="fixed top-5 right-5 z-[200] max-w-sm w-full animate-bounce">
-                    <div className="bg-[#1C1717] border border-[#f70776] text-white p-4 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md">
+                    <div className="bg-[#0c0c0c] border border-[#FF5D16] text-white p-4 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md">
                         <span className="text-xl">✨</span>
                         <p className="text-xs font-semibold flex-1">{notification.msg}</p>
                         <button onClick={() => setNotification(null)} className="text-gray-400 hover:text-white text-sm font-bold">✕</button>
@@ -661,23 +661,25 @@ const MediaManager = ({ onLogout }) => {
             )}
 
             {/* TOP HEADER */}
-            <header className="sticky top-0 z-40 bg-[#120F0F]/90 backdrop-blur-xl border-b border-[#241C1C]">
+            <header className="sticky top-0 z-40 bg-[#000000]/90 backdrop-blur-xl border-b border-[#1a1a1a]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
                     {/* Brand */}
                     <div className="flex items-center gap-3">
                         <div className="flex items-center">
-                            <img
-                                src="/SS.svg"
-                                alt="SS Audios"
-                                className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_0_12px_rgba(247,7,118,0.7)]"
-                            />
+                            <div className="bg-[#FDFDFC] p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,93,22,0.35)] flex items-center justify-center">
+                                <img
+                                    src="/ss-audios-logo.png"
+                                    alt="SS Audios"
+                                    className="h-7 sm:h-8 w-auto object-contain"
+                                />
+                            </div>
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
                                 <h1 className="text-sm sm:text-base font-black tracking-wider uppercase text-white">
                                     SS AUDIOS & DJ EVENTS
                                 </h1>
-                                <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-widest bg-[#f70776]/20 text-[#f70776] border border-[#f70776]/40 rounded-full">
+                                <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-widest bg-[#FF5D16]/20 text-[#FF5D16] border border-[#FF5D16]/40 rounded-full">
                                     Admin Studio
                                 </span>
                             </div>
@@ -701,8 +703,8 @@ const MediaManager = ({ onLogout }) => {
                             <span>🌐</span> Live Client Site ↗
                         </a>
 
-                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1C1717] border border-[#2B2323]">
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#f70776] to-[#c3195d] flex items-center justify-center text-[10px] font-bold text-white">
+                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0c0c0c] border border-[#222222]">
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#FF5D16] to-[#E04B0A] flex items-center justify-center text-[10px] font-bold text-white">
                                 SS
                             </div>
                             <span className="text-xs font-semibold text-gray-300">ssaudios25</span>
@@ -724,7 +726,7 @@ const MediaManager = ({ onLogout }) => {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-6 sm:mb-8">
                     <div
                         onClick={() => setActiveTab('gallery')}
-                        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer ${activeTab === 'gallery' ? 'bg-[#1C1717] border-[#f70776]/60 shadow-lg shadow-[#f70776]/10' : 'bg-[#161313] border-[#261E1E] hover:border-[#f70776]/30'}`}
+                        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer ${activeTab === 'gallery' ? 'bg-[#0c0c0c] border-[#FF5D16]/60 shadow-lg shadow-[#FF5D16]/10' : 'bg-[#0c0c0c] border-[#202020] hover:border-[#FF5D16]/30'}`}
                     >
                         <div className="flex items-center justify-between">
                             <span className="text-2xl sm:text-3xl">📸</span>
@@ -738,7 +740,7 @@ const MediaManager = ({ onLogout }) => {
 
                     <div
                         onClick={() => setActiveTab('services')}
-                        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer ${activeTab === 'services' ? 'bg-[#1C1717] border-[#f70776]/60 shadow-lg shadow-[#f70776]/10' : 'bg-[#161313] border-[#261E1E] hover:border-[#f70776]/30'}`}
+                        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer ${activeTab === 'services' ? 'bg-[#0c0c0c] border-[#FF5D16]/60 shadow-lg shadow-[#FF5D16]/10' : 'bg-[#0c0c0c] border-[#202020] hover:border-[#FF5D16]/30'}`}
                     >
                         <div className="flex items-center justify-between">
                             <span className="text-2xl sm:text-3xl">🎛️</span>
@@ -752,7 +754,7 @@ const MediaManager = ({ onLogout }) => {
 
                     <div
                         onClick={() => setActiveTab('plans')}
-                        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer ${activeTab === 'plans' ? 'bg-[#1C1717] border-[#f70776]/60 shadow-lg shadow-[#f70776]/10' : 'bg-[#161313] border-[#261E1E] hover:border-[#f70776]/30'}`}
+                        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer ${activeTab === 'plans' ? 'bg-[#0c0c0c] border-[#FF5D16]/60 shadow-lg shadow-[#FF5D16]/10' : 'bg-[#0c0c0c] border-[#202020] hover:border-[#FF5D16]/30'}`}
                     >
                         <div className="flex items-center justify-between">
                             <span className="text-2xl sm:text-3xl">⚡</span>
@@ -766,7 +768,7 @@ const MediaManager = ({ onLogout }) => {
 
                     <div
                         onClick={() => setActiveTab('inquiries')}
-                        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer ${activeTab === 'inquiries' ? 'bg-[#1C1717] border-[#f70776]/60 shadow-lg shadow-[#f70776]/10' : 'bg-[#161313] border-[#261E1E] hover:border-[#f70776]/30'}`}
+                        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer ${activeTab === 'inquiries' ? 'bg-[#0c0c0c] border-[#FF5D16]/60 shadow-lg shadow-[#FF5D16]/10' : 'bg-[#0c0c0c] border-[#202020] hover:border-[#FF5D16]/30'}`}
                     >
                         <div className="flex items-center justify-between">
                             <span className="text-2xl sm:text-3xl">📬</span>
@@ -780,34 +782,34 @@ const MediaManager = ({ onLogout }) => {
                 </div>
 
                 {/* DESKTOP / TABLET SEGMENTED TAB BAR */}
-                <div className="flex items-center gap-2 p-1.5 bg-[#141010] border border-[#261E1E] rounded-2xl mb-6 overflow-x-auto scrollbar-none">
+                <div className="flex items-center gap-2 p-1.5 bg-[#000000] border border-[#202020] rounded-2xl mb-6 overflow-x-auto scrollbar-none">
                     <button
                         onClick={() => setActiveTab('gallery')}
-                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'gallery' ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'gallery' ? 'bg-[#FF5D16] text-white shadow-lg shadow-[#FF5D16]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                     >
                         <span>📸</span> Gallery & Media
                     </button>
                     <button
                         onClick={() => setActiveTab('add')}
-                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'add' ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'add' ? 'bg-[#FF5D16] text-white shadow-lg shadow-[#FF5D16]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                     >
                         <span>🚀</span> Quick Upload
                     </button>
                     <button
                         onClick={() => setActiveTab('services')}
-                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'services' ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'services' ? 'bg-[#FF5D16] text-white shadow-lg shadow-[#FF5D16]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                     >
                         <span>🎛️</span> Services & Academy ({services.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('plans')}
-                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'plans' ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'plans' ? 'bg-[#FF5D16] text-white shadow-lg shadow-[#FF5D16]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                     >
                         <span>🎚️</span> Pricing Packages ({plans.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('inquiries')}
-                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'inquiries' ? 'bg-[#f70776] text-white shadow-lg shadow-[#f70776]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                        className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'inquiries' ? 'bg-[#FF5D16] text-white shadow-lg shadow-[#FF5D16]/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                     >
                         <span>📬</span> Inquiries ({inquiries.length})
                     </button>
@@ -819,7 +821,7 @@ const MediaManager = ({ onLogout }) => {
                 {activeTab === 'gallery' && (
                     <div className="space-y-6">
                         {/* Control bar: Search + Category filter + Type filter */}
-                        <div className="bg-[#161313] p-4 sm:p-5 rounded-3xl border border-[#261E1E] space-y-4">
+                        <div className="bg-[#0c0c0c] p-4 sm:p-5 rounded-3xl border border-[#202020] space-y-4">
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                                 {/* Search */}
                                 <div className="relative flex-1">
@@ -829,7 +831,7 @@ const MediaManager = ({ onLogout }) => {
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         placeholder="Search media by title or tag..."
-                                        className="w-full pl-10 pr-4 py-2.5 bg-[#0E0C0C] border border-[#2B2323] rounded-2xl text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#f70776]"
+                                        className="w-full pl-10 pr-4 py-2.5 bg-[#000000] border border-[#222222] rounded-2xl text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#FF5D16]"
                                     />
                                     {searchQuery && (
                                         <button
@@ -842,22 +844,22 @@ const MediaManager = ({ onLogout }) => {
                                 </div>
 
                                 {/* Media Type Filter (All / Images / Videos) */}
-                                <div className="flex items-center gap-1 bg-[#0E0C0C] p-1 border border-[#2B2323] rounded-2xl shrink-0">
+                                <div className="flex items-center gap-1 bg-[#000000] p-1 border border-[#222222] rounded-2xl shrink-0">
                                     <button
                                         onClick={() => setMediaTypeFilter('all')}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${mediaTypeFilter === 'all' ? 'bg-[#f70776] text-white' : 'text-gray-400 hover:text-white'}`}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${mediaTypeFilter === 'all' ? 'bg-[#FF5D16] text-white' : 'text-gray-400 hover:text-white'}`}
                                     >
                                         All
                                     </button>
                                     <button
                                         onClick={() => setMediaTypeFilter('image')}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${mediaTypeFilter === 'image' ? 'bg-[#f70776] text-white' : 'text-gray-400 hover:text-white'}`}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${mediaTypeFilter === 'image' ? 'bg-[#FF5D16] text-white' : 'text-gray-400 hover:text-white'}`}
                                     >
                                         🖼️ Images
                                     </button>
                                     <button
                                         onClick={() => setMediaTypeFilter('video')}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${mediaTypeFilter === 'video' ? 'bg-[#f70776] text-white' : 'text-gray-400 hover:text-white'}`}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${mediaTypeFilter === 'video' ? 'bg-[#FF5D16] text-white' : 'text-gray-400 hover:text-white'}`}
                                     >
                                         🎬 Videos
                                     </button>
@@ -865,7 +867,7 @@ const MediaManager = ({ onLogout }) => {
 
                                 <button
                                     onClick={fetchMedia}
-                                    className="px-4 py-2.5 bg-[#1C1717] hover:bg-[#251F1F] border border-[#2B2323] rounded-2xl text-xs font-semibold text-gray-300 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                                    className="px-4 py-2.5 bg-[#0c0c0c] hover:bg-[#202020] border border-[#222222] rounded-2xl text-xs font-semibold text-gray-300 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
                                 >
                                     <span>↻</span> Refresh
                                 </button>
@@ -875,7 +877,7 @@ const MediaManager = ({ onLogout }) => {
                             <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
                                 <button
                                     onClick={() => setFilterCategory('All')}
-                                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${filterCategory === 'All' ? 'bg-[#f70776] text-white shadow-md shadow-[#f70776]/20' : 'bg-[#0E0C0C] text-gray-400 hover:text-white border border-[#2B2323]'}`}
+                                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${filterCategory === 'All' ? 'bg-[#FF5D16] text-white shadow-md shadow-[#FF5D16]/20' : 'bg-[#000000] text-gray-400 hover:text-white border border-[#222222]'}`}
                                 >
                                     All Categories ({mediaList.length})
                                 </button>
@@ -885,7 +887,7 @@ const MediaManager = ({ onLogout }) => {
                                         <button
                                             key={idx}
                                             onClick={() => setFilterCategory(cat)}
-                                            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${filterCategory === cat ? 'bg-[#f70776] text-white shadow-md shadow-[#f70776]/20' : 'bg-[#0E0C0C] text-gray-400 hover:text-white border border-[#2B2323]'}`}
+                                            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${filterCategory === cat ? 'bg-[#FF5D16] text-white shadow-md shadow-[#FF5D16]/20' : 'bg-[#000000] text-gray-400 hover:text-white border border-[#222222]'}`}
                                         >
                                             {cat} {count > 0 && `(${count})`}
                                         </button>
@@ -897,11 +899,11 @@ const MediaManager = ({ onLogout }) => {
                         {/* Gallery Media Grid */}
                         {isLoading ? (
                             <div className="py-20 flex flex-col items-center justify-center gap-3">
-                                <div className="w-10 h-10 border-4 border-[#f70776] border-t-transparent rounded-full animate-spin"></div>
+                                <div className="w-10 h-10 border-4 border-[#FF5D16] border-t-transparent rounded-full animate-spin"></div>
                                 <p className="text-xs text-gray-400 font-semibold">Loading media assets...</p>
                             </div>
                         ) : filteredMedia.length === 0 ? (
-                            <div className="bg-[#161313] border border-[#261E1E] rounded-3xl p-12 text-center space-y-3">
+                            <div className="bg-[#0c0c0c] border border-[#202020] rounded-3xl p-12 text-center space-y-3">
                                 <span className="text-4xl">📂</span>
                                 <h3 className="text-base font-bold text-white">No media found in this category</h3>
                                 <p className="text-xs text-gray-400 max-w-sm mx-auto">
@@ -909,7 +911,7 @@ const MediaManager = ({ onLogout }) => {
                                 </p>
                                 <button
                                     onClick={() => setActiveTab('add')}
-                                    className="px-5 py-2.5 bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold rounded-xl shadow-lg transition-all cursor-pointer"
+                                    className="px-5 py-2.5 bg-[#FF5D16] hover:bg-[#E04B0A] text-white text-xs font-bold rounded-xl shadow-lg transition-all cursor-pointer"
                                 >
                                     + Upload Media Now
                                 </button>
@@ -921,7 +923,7 @@ const MediaManager = ({ onLogout }) => {
                                     return (
                                         <div
                                             key={item.id || item.key}
-                                            className="group bg-[#161313] rounded-2xl sm:rounded-3xl border border-[#261E1E] hover:border-[#f70776]/50 overflow-hidden shadow-lg transition-all flex flex-col justify-between"
+                                            className="group bg-[#0c0c0c] rounded-2xl sm:rounded-3xl border border-[#202020] hover:border-[#FF5D16]/50 overflow-hidden shadow-lg transition-all flex flex-col justify-between"
                                         >
                                             {/* Media Box */}
                                             <div
@@ -974,7 +976,7 @@ const MediaManager = ({ onLogout }) => {
                                                     {item.title || 'Untitled Asset'}
                                                 </h4>
 
-                                                <div className="flex items-center justify-between pt-2 border-t border-[#261E1E]">
+                                                <div className="flex items-center justify-between pt-2 border-t border-[#202020]">
                                                     <button
                                                         onClick={() => setEditingMedia(item)}
                                                         className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-lg text-[11px] font-semibold transition-all cursor-pointer"
@@ -1002,7 +1004,7 @@ const MediaManager = ({ onLogout }) => {
                 {/* ------------------------------------------------------------- */}
                 {activeTab === 'add' && (
                     <div className="max-w-2xl mx-auto">
-                        <div className="bg-[#161313] border border-[#261E1E] rounded-3xl p-5 sm:p-8 space-y-6 shadow-2xl">
+                        <div className="bg-[#0c0c0c] border border-[#202020] rounded-3xl p-5 sm:p-8 space-y-6 shadow-2xl">
                             <div>
                                 <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
                                     <span>🚀</span> Direct Media Publisher
@@ -1018,7 +1020,7 @@ const MediaManager = ({ onLogout }) => {
                                     <label className="block text-xs font-bold text-gray-300 mb-2 uppercase tracking-wider">
                                         Select Media File
                                     </label>
-                                    <label className="border-2 border-dashed border-[#2B2323] hover:border-[#f70776] rounded-3xl p-6 sm:p-10 flex flex-col items-center justify-center cursor-pointer transition-all bg-[#0E0C0C]/60 hover:bg-[#0E0C0C] group">
+                                    <label className="border-2 border-dashed border-[#222222] hover:border-[#FF5D16] rounded-3xl p-6 sm:p-10 flex flex-col items-center justify-center cursor-pointer transition-all bg-[#000000]/60 hover:bg-[#000000] group">
                                         <input
                                             type="file"
                                             accept="image/*,video/*"
@@ -1046,7 +1048,7 @@ const MediaManager = ({ onLogout }) => {
                                                         <img src={uploadFormData.filePreview} alt="Preview" className="w-full h-full object-cover" />
                                                     )}
                                                 </div>
-                                                <p className="text-xs font-bold text-[#f70776]">
+                                                <p className="text-xs font-bold text-[#FF5D16]">
                                                     {uploadFormData.selectedFile?.name}
                                                 </p>
                                                 <span className="text-[10px] text-gray-400">Click to change file</span>
@@ -1055,7 +1057,7 @@ const MediaManager = ({ onLogout }) => {
                                             <div className="space-y-2 text-center">
                                                 <span className="text-3xl group-hover:scale-110 transition-transform inline-block">📁</span>
                                                 <p className="text-xs sm:text-sm font-bold text-gray-200">
-                                                    Drag & drop photo or video here, or <span className="text-[#f70776] underline">browse files</span>
+                                                    Drag & drop photo or video here, or <span className="text-[#FF5D16] underline">browse files</span>
                                                 </p>
                                                 <p className="text-[11px] text-gray-500">
                                                     Supports JPG, PNG, WEBP, MP4, MOV (Up to 100MB)
@@ -1075,7 +1077,7 @@ const MediaManager = ({ onLogout }) => {
                                         value={quickMediaUrlInput}
                                         onChange={(e) => setQuickMediaUrlInput(e.target.value)}
                                         placeholder="https://images.unsplash.com/... or https://assets.mixkit.co/..."
-                                        className="w-full px-3.5 py-2.5 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        className="w-full px-3.5 py-2.5 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                     />
                                 </div>
 
@@ -1090,7 +1092,7 @@ const MediaManager = ({ onLogout }) => {
                                             value={uploadFormData.title}
                                             onChange={(e) => setUploadFormData({ ...uploadFormData, title: e.target.value })}
                                             placeholder="e.g. Royal Palace Wedding DJ Setup"
-                                            className="w-full px-3.5 py-2.5 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                            className="w-full px-3.5 py-2.5 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                         />
                                     </div>
 
@@ -1101,7 +1103,7 @@ const MediaManager = ({ onLogout }) => {
                                         <select
                                             value={uploadFormData.category}
                                             onChange={(e) => setUploadFormData({ ...uploadFormData, category: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                            className="w-full px-3.5 py-2.5 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                         >
                                             {DEFAULT_CATEGORIES.map((cat, i) => (
                                                 <option key={i} value={cat}>{cat}</option>
@@ -1121,7 +1123,7 @@ const MediaManager = ({ onLogout }) => {
                                             value={uploadFormData.customCategory}
                                             onChange={(e) => setUploadFormData({ ...uploadFormData, customCategory: e.target.value })}
                                             placeholder="e.g. Sangeet & Haldi Night"
-                                            className="w-full px-3.5 py-2.5 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                            className="w-full px-3.5 py-2.5 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                             required
                                         />
                                     </div>
@@ -1134,9 +1136,9 @@ const MediaManager = ({ onLogout }) => {
                                             <span>Uploading asset to cloud vault...</span>
                                             <span>{uploadProgress}%</span>
                                         </div>
-                                        <div className="w-full h-2 bg-[#2B2323] rounded-full overflow-hidden">
+                                        <div className="w-full h-2 bg-[#222222] rounded-full overflow-hidden">
                                             <div
-                                                className="h-full bg-gradient-to-r from-[#f70776] to-[#FF8A00] transition-all duration-300"
+                                                className="h-full bg-gradient-to-r from-[#FF5D16] to-[#FF8A00] transition-all duration-300"
                                                 style={{ width: `${uploadProgress || 60}%` }}
                                             ></div>
                                         </div>
@@ -1147,7 +1149,7 @@ const MediaManager = ({ onLogout }) => {
                                 <button
                                     type="submit"
                                     disabled={isDirectUploading}
-                                    className="w-full py-3.5 rounded-2xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-lg shadow-[#f70776]/25 transition-all disabled:opacity-50 cursor-pointer"
+                                    className="w-full py-3.5 rounded-2xl bg-[#FF5D16] hover:bg-[#E04B0A] text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-lg shadow-[#FF5D16]/25 transition-all disabled:opacity-50 cursor-pointer"
                                 >
                                     {isDirectUploading ? 'Publishing Asset...' : 'Upload & Publish to Live Gallery'}
                                 </button>
@@ -1162,7 +1164,7 @@ const MediaManager = ({ onLogout }) => {
                 {activeTab === 'services' && (
                     <div className="space-y-6">
                         {/* Header Box */}
-                        <div className="bg-[#161313] p-4 sm:p-6 rounded-3xl border border-[#261E1E] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="bg-[#0c0c0c] p-4 sm:p-6 rounded-3xl border border-[#202020] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div>
                                 <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
                                     <span>🎛️</span> Services, Studio & Academy Offerings
@@ -1175,13 +1177,13 @@ const MediaManager = ({ onLogout }) => {
                             <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
                                 <button
                                     onClick={() => setIsAddingService(true)}
-                                    className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                    className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-[#FF5D16] hover:bg-[#E04B0A] text-white text-xs font-bold shadow-lg shadow-[#FF5D16]/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                                 >
                                     <span>+</span> Add Offering
                                 </button>
                                 <button
                                     onClick={fetchServices}
-                                    className="px-3.5 py-2.5 rounded-2xl bg-[#0E0C0C] border border-[#2B2323] text-gray-300 hover:text-white text-xs font-semibold cursor-pointer"
+                                    className="px-3.5 py-2.5 rounded-2xl bg-[#000000] border border-[#222222] text-gray-300 hover:text-white text-xs font-semibold cursor-pointer"
                                 >
                                     ↻ Refresh
                                 </button>
@@ -1198,25 +1200,25 @@ const MediaManager = ({ onLogout }) => {
                         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
                             <button
                                 onClick={() => setServiceCategoryFilter('All')}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${serviceCategoryFilter === 'All' ? 'bg-[#f70776] text-white shadow-md' : 'bg-[#161313] text-gray-400 hover:text-white border border-[#261E1E]'}`}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${serviceCategoryFilter === 'All' ? 'bg-[#FF5D16] text-white shadow-md' : 'bg-[#0c0c0c] text-gray-400 hover:text-white border border-[#202020]'}`}
                             >
                                 All Offerings ({services.length})
                             </button>
                             <button
                                 onClick={() => setServiceCategoryFilter('DJ Events')}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${serviceCategoryFilter === 'DJ Events' ? 'bg-[#f70776] text-white shadow-md' : 'bg-[#161313] text-gray-400 hover:text-white border border-[#261E1E]'}`}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${serviceCategoryFilter === 'DJ Events' ? 'bg-[#FF5D16] text-white shadow-md' : 'bg-[#0c0c0c] text-gray-400 hover:text-white border border-[#202020]'}`}
                             >
                                 🎧 DJ & Event Sound
                             </button>
                             <button
                                 onClick={() => setServiceCategoryFilter('Raga Studio')}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${serviceCategoryFilter === 'Raga Studio' ? 'bg-[#f70776] text-white shadow-md' : 'bg-[#161313] text-gray-400 hover:text-white border border-[#261E1E]'}`}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${serviceCategoryFilter === 'Raga Studio' ? 'bg-[#FF5D16] text-white shadow-md' : 'bg-[#0c0c0c] text-gray-400 hover:text-white border border-[#202020]'}`}
                             >
                                 🎙️ Raga Studio
                             </button>
                             <button
                                 onClick={() => setServiceCategoryFilter('Sampoorna Academy')}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${serviceCategoryFilter === 'Sampoorna Academy' ? 'bg-[#f70776] text-white shadow-md' : 'bg-[#161313] text-gray-400 hover:text-white border border-[#261E1E]'}`}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${serviceCategoryFilter === 'Sampoorna Academy' ? 'bg-[#FF5D16] text-white shadow-md' : 'bg-[#0c0c0c] text-gray-400 hover:text-white border border-[#202020]'}`}
                             >
                                 🎼 Sampoorna Academy
                             </button>
@@ -1227,7 +1229,7 @@ const MediaManager = ({ onLogout }) => {
                             {filteredServices.map((service, idx) => (
                                 <div
                                     key={service.id || idx}
-                                    className="bg-[#161313] rounded-3xl border border-[#261E1E] hover:border-[#f70776]/50 overflow-hidden shadow-xl flex flex-col justify-between transition-all group"
+                                    className="bg-[#0c0c0c] rounded-3xl border border-[#202020] hover:border-[#FF5D16]/50 overflow-hidden shadow-xl flex flex-col justify-between transition-all group"
                                 >
                                     <div>
                                         {/* Image banner */}
@@ -1237,16 +1239,16 @@ const MediaManager = ({ onLogout }) => {
                                                 alt={service.title}
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-[#161313] via-transparent to-transparent"></div>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0c] via-transparent to-transparent"></div>
 
                                             <div className="absolute top-3 left-3">
-                                                <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-black/80 border border-white/20 text-[#f70776] backdrop-blur-md">
+                                                <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-black/80 border border-white/20 text-[#FF5D16] backdrop-blur-md">
                                                     {service.category || 'DJ Service'}
                                                 </span>
                                             </div>
 
                                             <div className="absolute bottom-3 right-3">
-                                                <span className="px-3 py-1 rounded-xl text-xs font-black bg-[#f70776] text-white shadow-lg">
+                                                <span className="px-3 py-1 rounded-xl text-xs font-black bg-[#FF5D16] text-white shadow-lg">
                                                     {service.price}
                                                 </span>
                                             </div>
@@ -1263,11 +1265,11 @@ const MediaManager = ({ onLogout }) => {
                                             </p>
 
                                             {/* Features tags */}
-                                            <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#261E1E]">
+                                            <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#202020]">
                                                 {(service.features || []).map((feat, fIdx) => (
                                                     <span
                                                         key={fIdx}
-                                                        className="px-2 py-0.5 rounded-md bg-[#0E0C0C] border border-[#2B2323] text-[10px] text-gray-300 font-medium"
+                                                        className="px-2 py-0.5 rounded-md bg-[#000000] border border-[#222222] text-[10px] text-gray-300 font-medium"
                                                     >
                                                         ✓ {feat}
                                                     </span>
@@ -1280,7 +1282,7 @@ const MediaManager = ({ onLogout }) => {
                                     <div className="p-4 sm:p-5 pt-0 flex items-center gap-2">
                                         <button
                                             onClick={() => setEditingService(JSON.parse(JSON.stringify(service)))}
-                                            className="flex-1 py-2.5 bg-[#0E0C0C] hover:bg-[#f70776] text-gray-200 hover:text-white border border-[#2B2323] hover:border-[#f70776] rounded-xl text-xs font-bold transition-all cursor-pointer text-center"
+                                            className="flex-1 py-2.5 bg-[#000000] hover:bg-[#FF5D16] text-gray-200 hover:text-white border border-[#222222] hover:border-[#FF5D16] rounded-xl text-xs font-bold transition-all cursor-pointer text-center"
                                         >
                                             ✏️ Edit Offering
                                         </button>
@@ -1304,7 +1306,7 @@ const MediaManager = ({ onLogout }) => {
                 {activeTab === 'plans' && (
                     <div className="space-y-6">
                         {/* Header Box */}
-                        <div className="bg-[#161313] p-4 sm:p-6 rounded-3xl border border-[#261E1E] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="bg-[#0c0c0c] p-4 sm:p-6 rounded-3xl border border-[#202020] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div>
                                 <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
                                     <span>🎚️</span> Event Pricing Packages & Tiers
@@ -1317,13 +1319,13 @@ const MediaManager = ({ onLogout }) => {
                             <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
                                 <button
                                     onClick={() => setIsAddingPlan(true)}
-                                    className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                    className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-[#FF5D16] hover:bg-[#E04B0A] text-white text-xs font-bold shadow-lg shadow-[#FF5D16]/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                                 >
                                     <span>+</span> Add Pricing Tier
                                 </button>
                                 <button
                                     onClick={fetchPlans}
-                                    className="px-3.5 py-2.5 rounded-2xl bg-[#0E0C0C] border border-[#2B2323] text-gray-300 hover:text-white text-xs font-semibold cursor-pointer"
+                                    className="px-3.5 py-2.5 rounded-2xl bg-[#000000] border border-[#222222] text-gray-300 hover:text-white text-xs font-semibold cursor-pointer"
                                 >
                                     ↻ Refresh
                                 </button>
@@ -1342,10 +1344,10 @@ const MediaManager = ({ onLogout }) => {
                                 <div
                                     key={idx}
                                     className={`rounded-3xl p-5 sm:p-6 border shadow-2xl flex flex-col justify-between transition-all ${plan.theme === 'silver'
-                                        ? 'border-slate-300/40 bg-gradient-to-b from-[#1C1F24] to-[#120F0F]'
+                                        ? 'border-slate-300/40 bg-gradient-to-b from-[#1C1F24] to-[#000000]'
                                         : plan.theme === 'gold'
-                                            ? 'border-amber-400/40 bg-gradient-to-b from-[#241E14] to-[#120F0F]'
-                                            : 'border-[#261E1E] bg-[#161313] hover:border-[#f70776]/50'
+                                            ? 'border-amber-400/40 bg-gradient-to-b from-[#241E14] to-[#000000]'
+                                            : 'border-[#202020] bg-[#0c0c0c] hover:border-[#FF5D16]/50'
                                         }`}
                                 >
                                     <div className="space-y-4">
@@ -1362,7 +1364,7 @@ const MediaManager = ({ onLogout }) => {
                                         {((plan.videos && plan.videos.length > 0) || plan.videoUrl) && (
                                             <div className="bg-black/60 border border-white/10 rounded-2xl p-2 space-y-2">
                                                 <div className="flex items-center justify-between px-1 text-[10px] font-bold text-gray-300">
-                                                    <span className="text-[#f70776] flex items-center gap-1">
+                                                    <span className="text-[#FF5D16] flex items-center gap-1">
                                                         <span>🎬</span> {plan.videos?.length || 1} Media Feed(s)
                                                     </span>
                                                 </div>
@@ -1392,13 +1394,13 @@ const MediaManager = ({ onLogout }) => {
                                             </p>
                                         </div>
 
-                                        <div className="p-3 bg-[#0E0C0C] rounded-2xl border border-white/5 flex items-center justify-between">
+                                        <div className="p-3 bg-[#000000] rounded-2xl border border-white/5 flex items-center justify-between">
                                             <span className="text-gray-400 text-xs">Event Package Rate:</span>
-                                            <span className="font-black text-[#f70776] text-base">{plan.price || plan.monthlyPrice}</span>
+                                            <span className="font-black text-[#FF5D16] text-base">{plan.price || plan.monthlyPrice}</span>
                                         </div>
 
                                         {/* Features List */}
-                                        <div className="space-y-1.5 pt-2 border-t border-[#261E1E]">
+                                        <div className="space-y-1.5 pt-2 border-t border-[#202020]">
                                             {plan.features?.map((feat, fIdx) => (
                                                 <div key={fIdx} className="flex items-center gap-2 text-xs">
                                                     <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${feat.included ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-500'}`}>
@@ -1413,10 +1415,10 @@ const MediaManager = ({ onLogout }) => {
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="pt-4 mt-4 border-t border-[#261E1E] flex items-center gap-2">
+                                    <div className="pt-4 mt-4 border-t border-[#202020] flex items-center gap-2">
                                         <button
                                             onClick={() => setEditingPlan(JSON.parse(JSON.stringify(plan)))}
-                                            className="flex-1 py-2.5 bg-[#f70776] hover:bg-[#c3195d] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer text-center"
+                                            className="flex-1 py-2.5 bg-[#FF5D16] hover:bg-[#E04B0A] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer text-center"
                                         >
                                             ✏️ Edit Tier
                                         </button>
@@ -1439,7 +1441,7 @@ const MediaManager = ({ onLogout }) => {
                 {/* ------------------------------------------------------------- */}
                 {activeTab === 'inquiries' && (
                     <div className="space-y-6">
-                        <div className="bg-[#161313] p-4 sm:p-6 rounded-3xl border border-[#261E1E] flex items-center justify-between">
+                        <div className="bg-[#0c0c0c] p-4 sm:p-6 rounded-3xl border border-[#202020] flex items-center justify-between">
                             <div>
                                 <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
                                     <span>📬</span> Direct Booking Inquiries & Leads
@@ -1450,14 +1452,14 @@ const MediaManager = ({ onLogout }) => {
                             </div>
                             <button
                                 onClick={fetchInquiries}
-                                className="px-4 py-2.5 rounded-2xl bg-[#0E0C0C] border border-[#2B2323] text-gray-300 hover:text-white text-xs font-semibold cursor-pointer"
+                                className="px-4 py-2.5 rounded-2xl bg-[#000000] border border-[#222222] text-gray-300 hover:text-white text-xs font-semibold cursor-pointer"
                             >
                                 ↻ Refresh
                             </button>
                         </div>
 
                         {inquiries.length === 0 ? (
-                            <div className="bg-[#161313] border border-[#261E1E] rounded-3xl p-12 text-center space-y-3">
+                            <div className="bg-[#0c0c0c] border border-[#202020] rounded-3xl p-12 text-center space-y-3">
                                 <span className="text-4xl">📭</span>
                                 <h3 className="text-base font-bold text-white">No Inquiries Received Yet</h3>
                                 <p className="text-xs text-gray-400 max-w-sm mx-auto">
@@ -1472,10 +1474,10 @@ const MediaManager = ({ onLogout }) => {
                                     const waText = encodeURIComponent(`Hello ${inq.name || 'Client'}, thank you for inquiring with SS Audios & DJ Events regarding your ${inq.service || 'event'}! How can we assist you?`);
 
                                     return (
-                                        <div key={inq.id || idx} className="bg-[#161313] border border-[#261E1E] rounded-3xl p-5 space-y-3 flex flex-col justify-between shadow-xl">
+                                        <div key={inq.id || idx} className="bg-[#0c0c0c] border border-[#202020] rounded-3xl p-5 space-y-3 flex flex-col justify-between shadow-xl">
                                             <div className="space-y-2.5">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-[#f70776]/20 text-[#f70776] border border-[#f70776]/30">
+                                                    <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-[#FF5D16]/20 text-[#FF5D16] border border-[#FF5D16]/30">
                                                         {inq.service || 'Event Booking'}
                                                     </span>
                                                     <span className="text-[11px] text-gray-500">
@@ -1493,13 +1495,13 @@ const MediaManager = ({ onLogout }) => {
                                                 </div>
 
                                                 {inq.message && (
-                                                    <p className="text-xs text-gray-400 bg-[#0E0C0C] p-3 rounded-xl border border-white/5 italic">
+                                                    <p className="text-xs text-gray-400 bg-[#000000] p-3 rounded-xl border border-white/5 italic">
                                                         "{inq.message}"
                                                     </p>
                                                 )}
                                             </div>
 
-                                            <div className="pt-3 border-t border-[#261E1E] flex items-center gap-2">
+                                            <div className="pt-3 border-t border-[#202020] flex items-center gap-2">
                                                 {cleanPhone && (
                                                     <a
                                                         href={`https://wa.me/${waNumber}?text=${waText}`}
@@ -1538,38 +1540,38 @@ const MediaManager = ({ onLogout }) => {
             {/* ------------------------------------------------------------- */}
             {/* MOBILE FIXED BOTTOM NAVIGATION DOCK */}
             {/* ------------------------------------------------------------- */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#120F0F]/95 backdrop-blur-xl border-t border-[#241C1C] px-2 py-2 flex items-center justify-around shadow-2xl">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#000000]/95 backdrop-blur-xl border-t border-[#1a1a1a] px-2 py-2 flex items-center justify-around shadow-2xl">
                 <button
                     onClick={() => setActiveTab('gallery')}
-                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'gallery' ? 'text-[#f70776]' : 'text-gray-400'}`}
+                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'gallery' ? 'text-[#FF5D16]' : 'text-gray-400'}`}
                 >
                     <span className="text-lg">📸</span>
                     <span className="text-[10px] font-bold">Gallery</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('add')}
-                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'add' ? 'text-[#f70776]' : 'text-gray-400'}`}
+                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'add' ? 'text-[#FF5D16]' : 'text-gray-400'}`}
                 >
                     <span className="text-lg">🚀</span>
                     <span className="text-[10px] font-bold">Upload</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('services')}
-                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'services' ? 'text-[#f70776]' : 'text-gray-400'}`}
+                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'services' ? 'text-[#FF5D16]' : 'text-gray-400'}`}
                 >
                     <span className="text-lg">🎛️</span>
                     <span className="text-[10px] font-bold">Services</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('plans')}
-                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'plans' ? 'text-[#f70776]' : 'text-gray-400'}`}
+                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'plans' ? 'text-[#FF5D16]' : 'text-gray-400'}`}
                 >
                     <span className="text-lg">🎚️</span>
                     <span className="text-[10px] font-bold">Plans</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('inquiries')}
-                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'inquiries' ? 'text-[#f70776]' : 'text-gray-400'}`}
+                    className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'inquiries' ? 'text-[#FF5D16]' : 'text-gray-400'}`}
                 >
                     <span className="text-lg">📬</span>
                     <span className="text-[10px] font-bold">Inquiries</span>
@@ -1579,9 +1581,9 @@ const MediaManager = ({ onLogout }) => {
             {/* 1. ADD SERVICE MODAL */}
             {isAddingService && (
                 <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-                    <div className="bg-[#181414] border border-[#2B2323] sm:border-[#f70776]/40 rounded-2xl sm:rounded-3xl max-w-xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+                    <div className="bg-[#0f0f0f] border border-[#222222] sm:border-[#FF5D16]/40 rounded-2xl sm:rounded-3xl max-w-xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
                         {/* Fixed Modal Header */}
-                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 border-b border-[#2B2323] flex items-center justify-between bg-[#141010]">
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 border-b border-[#222222] flex items-center justify-between bg-[#000000]">
                             <div>
                                 <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-1.5">
                                     <span>✨</span> Add Service, Studio Offering or Course
@@ -1597,7 +1599,7 @@ const MediaManager = ({ onLogout }) => {
                         </div>
 
                         {/* Quick Presets Bar */}
-                        <div className="shrink-0 px-4 py-1.5 sm:px-5 sm:py-2 bg-[#100D0D] border-b border-[#241C1C] flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none">
+                        <div className="shrink-0 px-4 py-1.5 sm:px-5 sm:py-2 bg-[#100D0D] border-b border-[#1a1a1a] flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none">
                             <span className="text-[9px] sm:text-[10px] uppercase font-bold text-gray-400 shrink-0">Preset:</span>
                             <button
                                 type="button"
@@ -1609,7 +1611,7 @@ const MediaManager = ({ onLogout }) => {
                                     description: 'Electrifying DJ and live remix performance designed to keep the crowd energetic and dance floors packed all night.',
                                     featuresStr: 'Live Stem Remixing\nFestival-Grade Sound Array\nSynchronized Visuals\nDedicated Sound Tech'
                                 })}
-                                className="px-2 py-0.5 rounded-lg bg-[#181414] hover:bg-[#c3195d]/30 border border-[#2B2323] text-[10px] sm:text-[11px] font-semibold text-gray-300 hover:text-white shrink-0 cursor-pointer"
+                                className="px-2 py-0.5 rounded-lg bg-[#0f0f0f] hover:bg-[#E04B0A]/30 border border-[#222222] text-[10px] sm:text-[11px] font-semibold text-gray-300 hover:text-white shrink-0 cursor-pointer"
                             >
                                 🎧 DJ Event
                             </button>
@@ -1623,7 +1625,7 @@ const MediaManager = ({ onLogout }) => {
                                     description: 'Zero-latency multi-track acoustic capture, live vocal coaching, tuning, and radio-ready audio production.',
                                     featuresStr: 'Zero-Latency Monitoring\n16-Channel Simultaneous Tracking\nTube Preamp Saturation\nStem Audio Export'
                                 })}
-                                className="px-2 py-0.5 rounded-lg bg-[#181414] hover:bg-[#c3195d]/30 border border-[#2B2323] text-[10px] sm:text-[11px] font-semibold text-[#f70776] hover:text-white shrink-0 cursor-pointer"
+                                className="px-2 py-0.5 rounded-lg bg-[#0f0f0f] hover:bg-[#E04B0A]/30 border border-[#222222] text-[10px] sm:text-[11px] font-semibold text-[#FF5D16] hover:text-white shrink-0 cursor-pointer"
                             >
                                 🎙️ Raga Studio
                             </button>
@@ -1637,7 +1639,7 @@ const MediaManager = ({ onLogout }) => {
                                     description: 'Curriculum-based mentorship in Singing, Keyboard, Flute, or Tabla with individual practice feedback.',
                                     featuresStr: '1-on-1 Artist Mentorship\nWeekend & Weekday Batches\nLive Studio Simulation\nPerformance Certification'
                                 })}
-                                className="px-2 py-0.5 rounded-lg bg-[#181414] hover:bg-[#c3195d]/30 border border-[#2B2323] text-[10px] sm:text-[11px] font-semibold text-amber-400 hover:text-white shrink-0 cursor-pointer"
+                                className="px-2 py-0.5 rounded-lg bg-[#0f0f0f] hover:bg-[#E04B0A]/30 border border-[#222222] text-[10px] sm:text-[11px] font-semibold text-amber-400 hover:text-white shrink-0 cursor-pointer"
                             >
                                 🎼 Academy Course
                             </button>
@@ -1653,7 +1655,7 @@ const MediaManager = ({ onLogout }) => {
                                         value={newService.title}
                                         onChange={e => setNewService({ ...newService, title: e.target.value })}
                                         placeholder="e.g. Vocal Training or Live DJ"
-                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                         required
                                     />
                                 </div>
@@ -1662,7 +1664,7 @@ const MediaManager = ({ onLogout }) => {
                                     <select
                                         value={newService.category || 'DJ Events'}
                                         onChange={e => setNewService({ ...newService, category: e.target.value })}
-                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                     >
                                         <option value="DJ Events">DJ Events & Sound</option>
                                         <option value="Raga Studio">Raga Studio</option>
@@ -1681,7 +1683,7 @@ const MediaManager = ({ onLogout }) => {
                                     value={newService.price}
                                     onChange={e => setNewService({ ...newService, price: e.target.value })}
                                     placeholder="e.g. ₹25,000 or ₹2,500 / session"
-                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                     required
                                 />
                             </div>
@@ -1696,7 +1698,7 @@ const MediaManager = ({ onLogout }) => {
                                         </div>
                                     )}
                                     <div className="flex-1">
-                                        <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#0E0C0C] hover:bg-[#120F0F] border border-dashed border-gray-600 hover:border-[#f70776] rounded-xl text-[11px] font-semibold text-gray-300 hover:text-white cursor-pointer transition-all">
+                                        <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#000000] hover:bg-[#000000] border border-dashed border-gray-600 hover:border-[#FF5D16] rounded-xl text-[11px] font-semibold text-gray-300 hover:text-white cursor-pointer transition-all">
                                             <input
                                                 type="file"
                                                 accept="image/*"
@@ -1718,7 +1720,7 @@ const MediaManager = ({ onLogout }) => {
                                                 }}
                                             />
                                             {isUploadingServiceImage ? (
-                                                <span className="text-[#f70776] font-bold">Uploading image...</span>
+                                                <span className="text-[#FF5D16] font-bold">Uploading image...</span>
                                             ) : (
                                                 <>
                                                     <span>📁</span>
@@ -1737,7 +1739,7 @@ const MediaManager = ({ onLogout }) => {
                                     value={newService.description}
                                     onChange={e => setNewService({ ...newService, description: e.target.value })}
                                     placeholder="Describe the audio performance, curriculum, or studio gear..."
-                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                     required
                                 />
                             </div>
@@ -1749,13 +1751,13 @@ const MediaManager = ({ onLogout }) => {
                                     value={newService.featuresStr}
                                     onChange={e => setNewService({ ...newService, featuresStr: e.target.value })}
                                     placeholder="Live Stem Remixing&#10;Festival-Grade Sound Array&#10;Synchronized Visuals"
-                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                 />
                             </div>
                         </form>
 
                         {/* Fixed Sticky Action Bar */}
-                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 bg-[#141010] border-t border-[#2B2323] flex items-center justify-end gap-2.5 sm:gap-3 z-10">
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 bg-[#000000] border-t border-[#222222] flex items-center justify-end gap-2.5 sm:gap-3 z-10">
                             <button
                                 type="button"
                                 onClick={() => setIsAddingService(false)}
@@ -1767,7 +1769,7 @@ const MediaManager = ({ onLogout }) => {
                                 type="submit"
                                 form="createServiceForm"
                                 disabled={isSavingService || isUploadingServiceImage}
-                                className="px-5 py-2 rounded-xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all disabled:opacity-50 cursor-pointer"
+                                className="px-5 py-2 rounded-xl bg-[#FF5D16] hover:bg-[#E04B0A] text-white text-xs font-bold shadow-lg shadow-[#FF5D16]/25 transition-all disabled:opacity-50 cursor-pointer"
                             >
                                 {isSavingService ? 'Saving...' : 'Add & Publish Live'}
                             </button>
@@ -1779,9 +1781,9 @@ const MediaManager = ({ onLogout }) => {
             {/* 2. EDIT SERVICE MODAL */}
             {editingService && (
                 <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-                    <div className="bg-[#181414] border border-[#2B2323] sm:border-[#f70776]/40 rounded-2xl sm:rounded-3xl max-w-xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+                    <div className="bg-[#0f0f0f] border border-[#222222] sm:border-[#FF5D16]/40 rounded-2xl sm:rounded-3xl max-w-xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
                         {/* Fixed Header */}
-                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 border-b border-[#2B2323] flex items-center justify-between bg-[#141010]">
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 border-b border-[#222222] flex items-center justify-between bg-[#000000]">
                             <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-1.5">
                                 <span>✏️</span> Edit Offering: {editingService.title}
                             </h3>
@@ -1802,7 +1804,7 @@ const MediaManager = ({ onLogout }) => {
                                         type="text"
                                         value={editingService.title}
                                         onChange={e => setEditingService({ ...editingService, title: e.target.value })}
-                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                         required
                                     />
                                 </div>
@@ -1811,7 +1813,7 @@ const MediaManager = ({ onLogout }) => {
                                     <select
                                         value={editingService.category || 'DJ Events'}
                                         onChange={e => setEditingService({ ...editingService, category: e.target.value })}
-                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                     >
                                         <option value="DJ Events">DJ Events & Sound</option>
                                         <option value="Raga Studio">Raga Studio</option>
@@ -1829,7 +1831,7 @@ const MediaManager = ({ onLogout }) => {
                                     type="text"
                                     value={editingService.price}
                                     onChange={e => setEditingService({ ...editingService, price: e.target.value })}
-                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                     required
                                 />
                             </div>
@@ -1844,7 +1846,7 @@ const MediaManager = ({ onLogout }) => {
                                         </div>
                                     )}
                                     <div className="flex-1">
-                                        <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#0E0C0C] hover:bg-[#120F0F] border border-dashed border-gray-600 hover:border-[#f70776] rounded-xl text-[11px] font-semibold text-gray-300 hover:text-white cursor-pointer transition-all">
+                                        <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#000000] hover:bg-[#000000] border border-dashed border-gray-600 hover:border-[#FF5D16] rounded-xl text-[11px] font-semibold text-gray-300 hover:text-white cursor-pointer transition-all">
                                             <input
                                                 type="file"
                                                 accept="image/*"
@@ -1866,7 +1868,7 @@ const MediaManager = ({ onLogout }) => {
                                                 }}
                                             />
                                             {isUploadingServiceImage ? (
-                                                <span className="text-[#f70776] font-bold">Uploading image...</span>
+                                                <span className="text-[#FF5D16] font-bold">Uploading image...</span>
                                             ) : (
                                                 <>
                                                     <span>📁</span>
@@ -1884,7 +1886,7 @@ const MediaManager = ({ onLogout }) => {
                                     rows="2"
                                     value={editingService.description}
                                     onChange={e => setEditingService({ ...editingService, description: e.target.value })}
-                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                     required
                                 />
                             </div>
@@ -1899,13 +1901,13 @@ const MediaManager = ({ onLogout }) => {
                                         const feats = val.split('\n').filter(s => s.trim().length > 0);
                                         setEditingService({ ...editingService, featuresStr: val, features: feats });
                                     }}
-                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                 />
                             </div>
                         </form>
 
                         {/* Fixed Sticky Action Bar */}
-                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 bg-[#141010] border-t border-[#2B2323] flex items-center justify-end gap-2.5 sm:gap-3 z-10">
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 bg-[#000000] border-t border-[#222222] flex items-center justify-end gap-2.5 sm:gap-3 z-10">
                             <button
                                 type="button"
                                 onClick={() => setEditingService(null)}
@@ -1917,7 +1919,7 @@ const MediaManager = ({ onLogout }) => {
                                 type="submit"
                                 form="editServiceForm"
                                 disabled={isSavingService || isUploadingServiceImage}
-                                className="px-5 py-2 rounded-xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all disabled:opacity-50 cursor-pointer"
+                                className="px-5 py-2 rounded-xl bg-[#FF5D16] hover:bg-[#E04B0A] text-white text-xs font-bold shadow-lg shadow-[#FF5D16]/25 transition-all disabled:opacity-50 cursor-pointer"
                             >
                                 {isSavingService ? 'Saving...' : 'Save & Publish Live'}
                             </button>
@@ -1929,8 +1931,8 @@ const MediaManager = ({ onLogout }) => {
             {/* 3. ADD PRICING PLAN MODAL */}
             {isAddingPlan && (
                 <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-                    <div className="bg-[#181414] border border-[#2B2323] sm:border-[#f70776]/40 rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
-                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 border-b border-[#2B2323] flex items-center justify-between bg-[#141010]">
+                    <div className="bg-[#0f0f0f] border border-[#222222] sm:border-[#FF5D16]/40 rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 border-b border-[#222222] flex items-center justify-between bg-[#000000]">
                             <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-1.5">
                                 <span>✨</span> Add New Pricing Package
                             </h3>
@@ -1951,7 +1953,7 @@ const MediaManager = ({ onLogout }) => {
                                         value={newPlan.name}
                                         onChange={e => setNewPlan({ ...newPlan, name: e.target.value })}
                                         placeholder="e.g. VIP Headliner Concert"
-                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                         required
                                     />
                                 </div>
@@ -1962,7 +1964,7 @@ const MediaManager = ({ onLogout }) => {
                                         value={newPlan.badge}
                                         onChange={e => setNewPlan({ ...newPlan, badge: e.target.value })}
                                         placeholder="e.g. MOST POPULAR, VIP, FESTIVAL"
-                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                         required
                                     />
                                 </div>
@@ -1976,7 +1978,7 @@ const MediaManager = ({ onLogout }) => {
                                         value={newPlan.price || newPlan.monthlyPrice || ''}
                                         onChange={e => setNewPlan({ ...newPlan, price: e.target.value, monthlyPrice: e.target.value })}
                                         placeholder="e.g. ₹25,000 or $499"
-                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                         required
                                     />
                                 </div>
@@ -1985,7 +1987,7 @@ const MediaManager = ({ onLogout }) => {
                                     <select
                                         value={newPlan.theme || 'standard'}
                                         onChange={e => setNewPlan({ ...newPlan, theme: e.target.value })}
-                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                     >
                                         <option value="standard">Standard Neon</option>
                                         <option value="silver">Silver Glow</option>
@@ -2001,16 +2003,16 @@ const MediaManager = ({ onLogout }) => {
                                     value={newPlan.desc}
                                     onChange={e => setNewPlan({ ...newPlan, desc: e.target.value })}
                                     placeholder="Brief overview of what this tier delivers..."
-                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                     required
                                 />
                             </div>
 
                             {/* Media Section */}
-                            <div className="p-3 bg-[#0E0C0C] border border-[#2B2323] rounded-2xl space-y-2">
+                            <div className="p-3 bg-[#000000] border border-[#222222] rounded-2xl space-y-2">
                                 <label className="block text-[11px] font-bold text-white flex items-center justify-between">
                                     <span>🎬 Showcase Media Feeds (Videos & Images)</span>
-                                    <span className="text-[#f70776] text-[10px]">{(newPlan.videos || []).length} Configured</span>
+                                    <span className="text-[#FF5D16] text-[10px]">{(newPlan.videos || []).length} Configured</span>
                                 </label>
                                 <div className="flex gap-2">
                                     <input
@@ -2032,7 +2034,7 @@ const MediaManager = ({ onLogout }) => {
                                             }));
                                             setPlanMediaUrlInput('');
                                         }}
-                                        className="px-3 py-1.5 bg-[#f70776] text-white rounded-xl text-xs font-bold cursor-pointer"
+                                        className="px-3 py-1.5 bg-[#FF5D16] text-white rounded-xl text-xs font-bold cursor-pointer"
                                     >
                                         + Add
                                     </button>
@@ -2052,7 +2054,7 @@ const MediaManager = ({ onLogout }) => {
                                                 features: [...feats, { text: 'New Feature Item', included: true }]
                                             });
                                         }}
-                                        className="text-[10px] text-[#f70776] font-bold hover:underline cursor-pointer"
+                                        className="text-[10px] text-[#FF5D16] font-bold hover:underline cursor-pointer"
                                     >
                                         + Add Feature
                                     </button>
@@ -2060,7 +2062,7 @@ const MediaManager = ({ onLogout }) => {
 
                                 <div className="space-y-1.5 max-h-36 overflow-y-auto">
                                     {newPlan.features?.map((feat, fIdx) => (
-                                        <div key={fIdx} className="flex items-center gap-2 bg-[#0E0C0C] p-1.5 rounded-xl border border-[#2B2323]">
+                                        <div key={fIdx} className="flex items-center gap-2 bg-[#000000] p-1.5 rounded-xl border border-[#222222]">
                                             <button
                                                 type="button"
                                                 onClick={() => {
@@ -2098,7 +2100,7 @@ const MediaManager = ({ onLogout }) => {
                             </div>
                         </form>
 
-                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 bg-[#141010] border-t border-[#2B2323] flex items-center justify-end gap-2.5 sm:gap-3 z-10">
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 bg-[#000000] border-t border-[#222222] flex items-center justify-end gap-2.5 sm:gap-3 z-10">
                             <button
                                 type="button"
                                 onClick={() => setIsAddingPlan(false)}
@@ -2110,7 +2112,7 @@ const MediaManager = ({ onLogout }) => {
                                 type="submit"
                                 form="createPlanForm"
                                 disabled={isSavingPlan}
-                                className="px-5 py-2 rounded-xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all disabled:opacity-50 cursor-pointer"
+                                className="px-5 py-2 rounded-xl bg-[#FF5D16] hover:bg-[#E04B0A] text-white text-xs font-bold shadow-lg shadow-[#FF5D16]/25 transition-all disabled:opacity-50 cursor-pointer"
                             >
                                 {isSavingPlan ? 'Saving...' : 'Add & Publish Tier'}
                             </button>
@@ -2122,8 +2124,8 @@ const MediaManager = ({ onLogout }) => {
             {/* 4. EDIT PRICING PLAN MODAL */}
             {editingPlan && (
                 <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-                    <div className="bg-[#181414] border border-[#2B2323] sm:border-[#f70776]/40 rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
-                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 border-b border-[#2B2323] flex items-center justify-between bg-[#141010]">
+                    <div className="bg-[#0f0f0f] border border-[#222222] sm:border-[#FF5D16]/40 rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 border-b border-[#222222] flex items-center justify-between bg-[#000000]">
                             <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-1.5">
                                 <span>🎚️</span> Edit Package: {editingPlan.name}
                             </h3>
@@ -2143,7 +2145,7 @@ const MediaManager = ({ onLogout }) => {
                                         type="text"
                                         value={editingPlan.name}
                                         onChange={e => setEditingPlan({ ...editingPlan, name: e.target.value })}
-                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                         required
                                     />
                                 </div>
@@ -2153,7 +2155,7 @@ const MediaManager = ({ onLogout }) => {
                                         type="text"
                                         value={editingPlan.badge}
                                         onChange={e => setEditingPlan({ ...editingPlan, badge: e.target.value })}
-                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                         required
                                     />
                                 </div>
@@ -2166,7 +2168,7 @@ const MediaManager = ({ onLogout }) => {
                                         type="text"
                                         value={editingPlan.price || editingPlan.monthlyPrice || ''}
                                         onChange={e => setEditingPlan({ ...editingPlan, price: e.target.value, monthlyPrice: e.target.value })}
-                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                         required
                                     />
                                 </div>
@@ -2175,7 +2177,7 @@ const MediaManager = ({ onLogout }) => {
                                     <select
                                         value={editingPlan.theme || 'standard'}
                                         onChange={e => setEditingPlan({ ...editingPlan, theme: e.target.value })}
-                                        className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                        className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                     >
                                         <option value="standard">Standard Neon</option>
                                         <option value="silver">Silver Glow</option>
@@ -2190,16 +2192,16 @@ const MediaManager = ({ onLogout }) => {
                                     rows="2"
                                     value={editingPlan.desc}
                                     onChange={e => setEditingPlan({ ...editingPlan, desc: e.target.value })}
-                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#f70776]"
+                                    className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF5D16]"
                                     required
                                 />
                             </div>
 
                             {/* Media Feeds */}
-                            <div className="p-3 bg-[#0E0C0C] border border-[#2B2323] rounded-2xl space-y-2">
+                            <div className="p-3 bg-[#000000] border border-[#222222] rounded-2xl space-y-2">
                                 <label className="block text-[11px] font-bold text-white flex items-center justify-between">
                                     <span>🎬 Showcase Media Feeds</span>
-                                    <span className="text-[#f70776] text-[10px]">{(editingPlan.videos || []).length} Configured</span>
+                                    <span className="text-[#FF5D16] text-[10px]">{(editingPlan.videos || []).length} Configured</span>
                                 </label>
                                 <div className="flex gap-2">
                                     <input
@@ -2221,7 +2223,7 @@ const MediaManager = ({ onLogout }) => {
                                             }));
                                             setEditPlanMediaUrlInput('');
                                         }}
-                                        className="px-3 py-1.5 bg-[#f70776] text-white rounded-xl text-xs font-bold cursor-pointer"
+                                        className="px-3 py-1.5 bg-[#FF5D16] text-white rounded-xl text-xs font-bold cursor-pointer"
                                     >
                                         + Add
                                     </button>
@@ -2241,7 +2243,7 @@ const MediaManager = ({ onLogout }) => {
                                                 features: [...feats, { text: 'New Feature Item', included: true }]
                                             });
                                         }}
-                                        className="text-[10px] text-[#f70776] font-bold hover:underline cursor-pointer"
+                                        className="text-[10px] text-[#FF5D16] font-bold hover:underline cursor-pointer"
                                     >
                                         + Add Feature
                                     </button>
@@ -2249,7 +2251,7 @@ const MediaManager = ({ onLogout }) => {
 
                                 <div className="space-y-1.5 max-h-36 overflow-y-auto">
                                     {editingPlan.features?.map((feat, fIdx) => (
-                                        <div key={fIdx} className="flex items-center gap-2 bg-[#0E0C0C] p-1.5 rounded-xl border border-[#2B2323]">
+                                        <div key={fIdx} className="flex items-center gap-2 bg-[#000000] p-1.5 rounded-xl border border-[#222222]">
                                             <button
                                                 type="button"
                                                 onClick={() => {
@@ -2287,7 +2289,7 @@ const MediaManager = ({ onLogout }) => {
                             </div>
                         </form>
 
-                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 bg-[#141010] border-t border-[#2B2323] flex items-center justify-end gap-2.5 sm:gap-3 z-10">
+                        <div className="shrink-0 px-4 py-2.5 sm:px-5 sm:py-3 bg-[#000000] border-t border-[#222222] flex items-center justify-end gap-2.5 sm:gap-3 z-10">
                             <button
                                 type="button"
                                 onClick={() => setEditingPlan(null)}
@@ -2299,7 +2301,7 @@ const MediaManager = ({ onLogout }) => {
                                 type="submit"
                                 form="editPlanForm"
                                 disabled={isSavingPlan}
-                                className="px-5 py-2 rounded-xl bg-[#f70776] hover:bg-[#c3195d] text-white text-xs font-bold shadow-lg shadow-[#f70776]/25 transition-all disabled:opacity-50 cursor-pointer"
+                                className="px-5 py-2 rounded-xl bg-[#FF5D16] hover:bg-[#E04B0A] text-white text-xs font-bold shadow-lg shadow-[#FF5D16]/25 transition-all disabled:opacity-50 cursor-pointer"
                             >
                                 {isSavingPlan ? 'Saving...' : 'Save & Publish Live'}
                             </button>
@@ -2316,12 +2318,12 @@ const MediaManager = ({ onLogout }) => {
                 >
                     <div
                         onClick={e => e.stopPropagation()}
-                        className="relative max-w-4xl w-full bg-[#181414] border border-[#2B2323] rounded-3xl overflow-hidden shadow-2xl space-y-3 p-4"
+                        className="relative max-w-4xl w-full bg-[#0f0f0f] border border-[#222222] rounded-3xl overflow-hidden shadow-2xl space-y-3 p-4"
                     >
-                        <div className="flex items-center justify-between pb-2 border-b border-[#2B2323]">
+                        <div className="flex items-center justify-between pb-2 border-b border-[#222222]">
                             <div>
                                 <h3 className="text-sm font-bold text-white">{previewMediaModal.title || 'Media Asset'}</h3>
-                                <span className="text-[11px] text-[#f70776]">{previewMediaModal.category}</span>
+                                <span className="text-[11px] text-[#FF5D16]">{previewMediaModal.category}</span>
                             </div>
                             <button
                                 onClick={() => setPreviewMediaModal(null)}
@@ -2345,8 +2347,8 @@ const MediaManager = ({ onLogout }) => {
             {/* 6. EDIT MEDIA MODAL */}
             {editingMedia && (
                 <div className="fixed inset-0 z-[110] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-                    <div className="bg-[#181414] border border-[#2B2323] rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-                        <div className="flex items-center justify-between border-b border-[#2B2323] pb-3">
+                    <div className="bg-[#0f0f0f] border border-[#222222] rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-[#222222] pb-3">
                             <h3 className="text-base font-bold text-white">Edit Media Tag</h3>
                             <button onClick={() => setEditingMedia(null)} className="text-gray-400 hover:text-white">✕</button>
                         </div>
@@ -2358,7 +2360,7 @@ const MediaManager = ({ onLogout }) => {
                                     type="text"
                                     value={editingMedia.title || ''}
                                     onChange={e => setEditingMedia({ ...editingMedia, title: e.target.value })}
-                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs text-white"
+                                    className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs text-white"
                                     required
                                 />
                             </div>
@@ -2368,7 +2370,7 @@ const MediaManager = ({ onLogout }) => {
                                 <select
                                     value={editingMedia.category || 'Wedding'}
                                     onChange={e => setEditingMedia({ ...editingMedia, category: e.target.value })}
-                                    className="w-full px-3 py-2 bg-[#0E0C0C] border border-[#2B2323] rounded-xl text-xs text-white"
+                                    className="w-full px-3 py-2 bg-[#000000] border border-[#222222] rounded-xl text-xs text-white"
                                 >
                                     {DEFAULT_CATEGORIES.map((cat, i) => (
                                         <option key={i} value={cat}>{cat}</option>
@@ -2386,7 +2388,7 @@ const MediaManager = ({ onLogout }) => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-5 py-2 bg-[#f70776] text-white font-bold text-xs rounded-xl"
+                                    className="px-5 py-2 bg-[#FF5D16] text-white font-bold text-xs rounded-xl"
                                 >
                                     Save Changes
                                 </button>

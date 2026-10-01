@@ -83,10 +83,10 @@ export default function AdminIntroLoader({ onComplete }) {
 
       // Deep space background gradient
       const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-      bgGrad.addColorStop(0, "#080407");
-      bgGrad.addColorStop(0.5, "#140A12");
-      bgGrad.addColorStop(0.7, "#28071E");
-      bgGrad.addColorStop(1, "#0D040A");
+      bgGrad.addColorStop(0, "#000000");
+      bgGrad.addColorStop(0.5, "#000000");
+      bgGrad.addColorStop(0.7, "#000000");
+      bgGrad.addColorStop(1, "#000000");
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, width, height);
 
@@ -110,7 +110,7 @@ export default function AdminIntroLoader({ onComplete }) {
           const alpha = Math.min(1, (1000 - star.z) / 600);
           ctx.beginPath();
           ctx.arc(px, py, star.size * k * 0.8, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(247, 7, 118, ${alpha * 0.7})`;
+          ctx.fillStyle = `rgba(255, 93, 22, ${alpha * 0.7})`;
           ctx.fill();
         }
       });
@@ -121,8 +121,8 @@ export default function AdminIntroLoader({ onComplete }) {
       const sunY = height * 0.5;
 
       const sunGrad = ctx.createLinearGradient(0, sunY - sunRadius, 0, sunY + sunRadius);
-      sunGrad.addColorStop(0, "#FF007F");
-      sunGrad.addColorStop(0.4, "#F70776");
+      sunGrad.addColorStop(0, "#FF7A3D");
+      sunGrad.addColorStop(0.4, "#FF5D16");
       sunGrad.addColorStop(0.8, "#FF8C00");
       sunGrad.addColorStop(1, "#FFD700");
 
@@ -130,7 +130,7 @@ export default function AdminIntroLoader({ onComplete }) {
       ctx.beginPath();
       ctx.arc(centerX, sunY, sunRadius, Math.PI, 0, false);
       ctx.fillStyle = sunGrad;
-      ctx.shadowColor = "#F70776";
+      ctx.shadowColor = "#FF5D16";
       ctx.shadowBlur = 40;
       ctx.fill();
 
@@ -138,7 +138,7 @@ export default function AdminIntroLoader({ onComplete }) {
       for (let s = 1; s <= 6; s++) {
         const sliceY = sunY - sunRadius + (s * (sunRadius / 6));
         const sliceHeight = s * 1.8;
-        ctx.fillStyle = "#080407";
+        ctx.fillStyle = "#000000";
         ctx.fillRect(centerX - sunRadius, sliceY, sunRadius * 2, sliceHeight);
       }
       ctx.restore();
@@ -146,16 +146,16 @@ export default function AdminIntroLoader({ onComplete }) {
       // --- 3D PERSPECTIVE RETRO GRID ---
       const horizonY = height * 0.5;
       ctx.save();
-      ctx.strokeStyle = "rgba(247, 7, 118, 0.45)";
+      ctx.strokeStyle = "rgba(255, 93, 22, 0.45)";
       ctx.lineWidth = 1.2;
-      ctx.shadowColor = "#F70776";
+      ctx.shadowColor = "#FF5D16";
       ctx.shadowBlur = 8;
 
       // Horizon line
       ctx.beginPath();
       ctx.moveTo(0, horizonY);
       ctx.lineTo(width, horizonY);
-      ctx.strokeStyle = "rgba(247, 7, 118, 0.9)";
+      ctx.strokeStyle = "rgba(255, 93, 22, 0.9)";
       ctx.lineWidth = 2;
       ctx.stroke();
 
@@ -167,7 +167,7 @@ export default function AdminIntroLoader({ onComplete }) {
           ctx.beginPath();
           ctx.moveTo(0, actualY);
           ctx.lineTo(width, actualY);
-          ctx.strokeStyle = `rgba(247, 7, 118, ${Math.min(0.8, p * 0.9)})`;
+          ctx.strokeStyle = `rgba(255, 93, 22, ${Math.min(0.8, p * 0.9)})`;
           ctx.stroke();
         }
       }
@@ -179,7 +179,7 @@ export default function AdminIntroLoader({ onComplete }) {
         ctx.beginPath();
         ctx.moveTo(centerX, horizonY);
         ctx.lineTo(xBottom, height);
-        ctx.strokeStyle = `rgba(195, 25, 93, 0.4)`;
+        ctx.strokeStyle = `rgba(255, 93, 22, 0.4)`;
         ctx.stroke();
       }
       ctx.restore();
@@ -192,12 +192,12 @@ export default function AdminIntroLoader({ onComplete }) {
         const barH = bar.baseHeight + Math.abs(pulse) * 45 + Math.sin(time * 0.05 + bx * 0.01) * 20;
 
         const eqGrad = ctx.createLinearGradient(bx, height - barH, bx, height);
-        eqGrad.addColorStop(0, "#F70776");
-        eqGrad.addColorStop(0.5, "#C3195D");
-        eqGrad.addColorStop(1, "rgba(20, 16, 16, 0)");
+        eqGrad.addColorStop(0, "#FF5D16");
+        eqGrad.addColorStop(0.5, "#E04B0A");
+        eqGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
 
         ctx.fillStyle = eqGrad;
-        ctx.shadowColor = "#F70776";
+        ctx.shadowColor = "#FF5D16";
         ctx.shadowBlur = 10;
         ctx.fillRect(bx - 3, height - barH, 6, barH);
 
@@ -222,9 +222,9 @@ export default function AdminIntroLoader({ onComplete }) {
           else ctx.lineTo(x, y);
         }
 
-        ctx.strokeStyle = w === 0 ? "rgba(247, 7, 118, 0.85)" : w === 1 ? "rgba(0, 240, 255, 0.65)" : "rgba(255, 140, 0, 0.5)";
+        ctx.strokeStyle = w === 0 ? "rgba(255, 93, 22, 0.85)" : w === 1 ? "rgba(0, 240, 255, 0.65)" : "rgba(255, 140, 0, 0.5)";
         ctx.lineWidth = w === 0 ? 2.5 : 1.5;
-        ctx.shadowColor = "#F70776";
+        ctx.shadowColor = "#FF5D16";
         ctx.shadowBlur = 15;
         ctx.stroke();
       }
@@ -250,7 +250,7 @@ export default function AdminIntroLoader({ onComplete }) {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] bg-[#0A0608] flex flex-col items-center justify-between p-6 sm:p-12 overflow-hidden transition-all duration-700 select-none ${
+      className={`fixed inset-0 z-[9999] bg-[#000000] flex flex-col items-center justify-between p-6 sm:p-12 overflow-hidden transition-all duration-700 select-none ${
         isFadingOut ? "opacity-0 scale-105 pointer-events-none filter blur-sm" : "opacity-100 scale-100"
       }`}
     >
@@ -264,15 +264,15 @@ export default function AdminIntroLoader({ onComplete }) {
       {/* TOP BAR: SYSTEM STATUS & SKIP BUTTON */}
       <div className="relative z-20 w-full max-w-5xl flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#F70776] animate-ping" />
-          <span className="text-[11px] font-black uppercase tracking-[0.25em] text-[#FAF6F6] drop-shadow-[0_0_8px_#F70776]">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#FF5D16] animate-ping" />
+          <span className="text-[11px] font-black uppercase tracking-[0.25em] text-[#FDFDFC] drop-shadow-[0_0_8px_#FF5D16]">
             SS AUDIOS CORE // BOOT SEQUENCE
           </span>
         </div>
 
         <button
           onClick={handleSkip}
-          className="px-4 py-1.5 rounded-full bg-[#1C1717]/80 hover:bg-[#F70776] border border-[#2B2323] hover:border-[#F70776] text-[#A69B9B] hover:text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-300 backdrop-blur-md shadow-lg cursor-pointer flex items-center gap-2 group"
+          className="px-4 py-1.5 rounded-full bg-[#0c0c0c]/80 hover:bg-[#FF5D16] border border-[#222222] hover:border-[#FF5D16] text-[#9E9E9E] hover:text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-300 backdrop-blur-md shadow-lg cursor-pointer flex items-center gap-2 group"
         >
           <span>Skip Intro</span>
           <span className="transform group-hover:translate-x-1 transition-transform">→</span>
@@ -283,25 +283,25 @@ export default function AdminIntroLoader({ onComplete }) {
       <div className="relative z-20 flex flex-col items-center justify-center text-center my-auto space-y-5">
         {/* Animated Sonic Rings Logo */}
         <div className="relative w-28 h-28 sm:w-36 sm:h-36 flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full border-2 border-[#F70776]/40 animate-ping" />
-          <div className="absolute inset-2 rounded-full border border-dashed border-[#F70776]/60 animate-spin" style={{ animationDuration: "12s" }} />
-          <div className="absolute inset-4 rounded-full bg-gradient-to-tr from-[#C3195D] via-[#F70776] to-[#FF8C00] opacity-20 blur-xl animate-pulse" />
+          <div className="absolute inset-0 rounded-full border-2 border-[#FF5D16]/40 animate-ping" />
+          <div className="absolute inset-2 rounded-full border border-dashed border-[#FF5D16]/60 animate-spin" style={{ animationDuration: "12s" }} />
+          <div className="absolute inset-4 rounded-full bg-gradient-to-tr from-[#E04B0A] via-[#FF5D16] to-[#FF8C00] opacity-20 blur-xl animate-pulse" />
           
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#141010]/90 border border-[#F70776] shadow-[0_0_40px_rgba(247,7,118,0.6)] flex items-center justify-center backdrop-blur-md transform hover:scale-105 transition-transform p-3 sm:p-4">
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#000000]/90 border border-[#FF5D16] shadow-[0_0_40px_rgba(255, 93, 22,0.6)] flex items-center justify-center backdrop-blur-md transform hover:scale-105 transition-transform p-3 sm:p-4">
             <img
-              src="/SS.svg"
+              src="/ss-audios-logo.png"
               alt="SS Audios"
-              className="w-full h-auto object-contain drop-shadow-[0_0_20px_rgba(247,7,118,0.9)]"
+              className="w-full h-auto object-contain drop-shadow-[0_0_20px_rgba(255, 93, 22,0.9)]"
             />
           </div>
         </div>
 
         {/* Brand Title */}
         <div className="space-y-1">
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight text-white drop-shadow-[0_0_20px_rgba(247,7,118,0.8)] font-sans">
-            SOUND<span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F70776] via-[#FF007F] to-[#FF8C00]">SCAPE</span>
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight text-white drop-shadow-[0_0_20px_rgba(255, 93, 22,0.8)] font-sans">
+            SOUND<span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF5D16] via-[#FF7A3D] to-[#FF8C00]">SCAPE</span>
           </h1>
-          <p className="text-xs sm:text-sm uppercase tracking-[0.35em] text-[#BDB2B2] font-bold">
+          <p className="text-xs sm:text-sm uppercase tracking-[0.35em] text-[#B5B5B5] font-bold">
             Live Audio & Stage Production Studio
           </p>
         </div>
@@ -309,18 +309,18 @@ export default function AdminIntroLoader({ onComplete }) {
 
       {/* BOTTOM: RETRO PROGRESS BAR & BOOTLOG */}
       <div className="relative z-20 w-full max-w-md flex flex-col items-center space-y-3">
-        <div className="w-full flex items-center justify-between text-[11px] font-mono font-bold text-[#A69B9B]">
+        <div className="w-full flex items-center justify-between text-[11px] font-mono font-bold text-[#9E9E9E]">
           <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#F70776] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5D16] animate-pulse" />
             {statusText}
           </span>
-          <span className="text-[#F70776]">{Math.floor(progress)}%</span>
+          <span className="text-[#FF5D16]">{Math.floor(progress)}%</span>
         </div>
 
         {/* Progress Bar Container */}
-        <div className="w-full h-2 rounded-full bg-[#181414] border border-[#2B2323] overflow-hidden p-0.5 shadow-inner">
+        <div className="w-full h-2 rounded-full bg-[#0f0f0f] border border-[#222222] overflow-hidden p-0.5 shadow-inner">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-[#C3195D] via-[#F70776] to-[#FF8C00] shadow-[0_0_15px_#F70776] transition-all duration-100 ease-out"
+            className="h-full rounded-full bg-gradient-to-r from-[#E04B0A] via-[#FF5D16] to-[#FF8C00] shadow-[0_0_15px_#FF5D16] transition-all duration-100 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>

@@ -18,7 +18,7 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#141010] relative">
+    <div className="min-h-screen bg-[#000000] relative">
       {isAuthenticated ? (
         <MediaManager onLogout={handleLogout} />
       ) : (

@@ -68,7 +68,7 @@ const LoginPage = ({ onLoginSuccess }) => {
     };
 
     return (
-        <div className="relative min-h-screen bg-[#141010] flex items-center justify-center p-4 sm:p-6 font-sans overflow-hidden">
+        <div className="relative min-h-screen bg-[#000000] flex items-center justify-center p-4 sm:p-6 font-sans overflow-hidden">
             {/* Custom Equalizer Spectrum Bar Keyframe Animations */}
             <style>{`
                 /* IDLE MEDIUM FREQUENCY OSCILLATION */
@@ -114,11 +114,11 @@ const LoginPage = ({ onLoginSuccess }) => {
             </div>
 
             {/* Ambient vignette and glow */}
-            <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#141010] via-transparent to-[#141010]/80 pointer-events-none" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#f70776]/10 rounded-full blur-[140px] pointer-events-none" />
+            <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#000000] via-transparent to-[#000000]/80 pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FF5D16]/10 rounded-full blur-[140px] pointer-events-none" />
 
             {/* Main Login Card - Clean & Stable Proportions */}
-            <div className="relative z-10 bg-[#1C1717]/95 backdrop-blur-xl border border-[#2B2323] hover:border-[#f70776]/40 transition-colors duration-500 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col md:flex-row w-full max-w-4xl min-h-[580px] md:h-[600px]">
+            <div className="relative z-10 bg-[#0c0c0c]/95 backdrop-blur-xl border border-[#222222] hover:border-[#FF5D16]/40 transition-colors duration-500 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col md:flex-row w-full max-w-4xl min-h-[580px] md:h-[600px]">
 
                 {/* Left Side: Visual / Hero Section */}
                 <div className="relative md:w-1/2 min-h-[220px] md:min-h-full flex flex-col justify-between p-6 sm:p-8 overflow-hidden shrink-0">
@@ -128,46 +128,51 @@ const LoginPage = ({ onLoginSuccess }) => {
                             backgroundImage: `url('https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=1000&auto=format&fit=crop')`
                         }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1C1717] via-[#1C1717]/65 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0c] via-[#0c0c0c]/65 to-transparent" />
 
-                    <div className="relative z-10 flex justify-between items-center">
-                        <span className="text-xs font-bold uppercase tracking-widest text-[#f70776] bg-[#141010]/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-lg">
+                    <div className="relative z-10 flex flex-col gap-3">
+                        <div className="bg-[#FDFDFC] px-3.5 py-2 rounded-xl shadow-2xl inline-block max-w-[220px]">
+                            <img src="/ss-audios-banner.png" alt="SS Audios Banner" className="w-full h-auto object-contain" />
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF5D16] bg-[#000000]/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-lg w-fit">
                             Audio & Visual Experience
                         </span>
                     </div>
 
-                    <div className="relative z-10 bg-[#141010]/80 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-xl">
+                    <div className="relative z-10 bg-[#000000]/80 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-xl">
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="w-2 h-2 rounded-full bg-[#f70776] animate-pulse" />
+                            <span className="w-2 h-2 rounded-full bg-[#FF5D16] animate-pulse" />
                             <h4 className="text-white text-sm font-bold">Immersive Audio Hub</h4>
                         </div>
-                        <p className="text-[#BDB2B2] text-xs leading-relaxed font-light">
+                        <p className="text-[#B5B5B5] text-xs leading-relaxed font-light">
                             Manage soundscapes, live stage visuals, and media assets in real time.
                         </p>
                     </div>
                 </div>
 
                 {/* Right Side: Form Container */}
-                <div className="relative md:w-1/2 bg-[#1C1717]/95 p-7 sm:p-9 flex flex-col justify-between shrink-0 overflow-hidden border-t md:border-t-0 md:border-l border-[#2B2323]">
+                <div className="relative md:w-1/2 bg-[#0c0c0c]/95 p-7 sm:p-9 flex flex-col justify-between shrink-0 overflow-hidden border-t md:border-t-0 md:border-l border-[#222222]">
                     
                     {/* 1. Header Section */}
                     <div>
                         <div className="flex justify-between items-center mb-5">
                             <div className="flex items-center">
-                                <img
-                                    src="/SS.svg"
-                                    alt="SS Audios"
-                                    className="h-7 sm:h-8 w-auto object-contain drop-shadow-[0_0_12px_rgba(247,7,118,0.7)]"
-                                />
+                                <div className="bg-[#FDFDFC] p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,93,22,0.35)] flex items-center justify-center">
+                                    <img
+                                        src="/ss-audios-logo.png"
+                                        alt="SS Audios"
+                                        className="h-7 sm:h-8 w-auto object-contain"
+                                    />
+                                </div>
                             </div>
-                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#A69B9B] px-2.5 py-1 rounded-full bg-[#141010] border border-[#2B2323]">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9E9E9E] px-2.5 py-1 rounded-full bg-[#000000] border border-[#222222]">
                                 Admin Portal
                             </span>
                         </div>
 
                         <div>
                             <h2 className="text-2xl font-extrabold text-white mb-0.5">Welcome Back</h2>
-                            <p className="text-[#A69B9B] text-xs font-light">Enter credentials to unlock SS Audios Studio</p>
+                            <p className="text-[#9E9E9E] text-xs font-light">Enter credentials to unlock SS Audios Studio</p>
                         </div>
                     </div>
 
@@ -180,7 +185,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                 ? 'bg-emerald-950/40 border-emerald-400 shadow-[0_0_30px_rgba(0,255,170,0.35)]'
                                 : spectrumState === 'dropped_red'
                                 ? 'bg-red-950/40 border-red-500 shadow-[0_0_25px_rgba(239,68,68,0.35)] animate-[redGlitchJitter_0.35s_ease-in-out]'
-                                : 'bg-[#141010]/90 border-[#2B2323]'
+                                : 'bg-[#000000]/90 border-[#222222]'
                         }`}
                     >
                         {/* Audio Spectrum Status Header */}
@@ -192,7 +197,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                             ? 'bg-[#00ffaa] shadow-[0_0_8px_#00ffaa] animate-ping'
                                             : spectrumState === 'dropped_red'
                                             ? 'bg-red-500 shadow-[0_0_8px_#ef4444]'
-                                            : 'bg-[#f70776] animate-pulse'
+                                            : 'bg-[#FF5D16] animate-pulse'
                                     }`}
                                 />
                                 <span
@@ -201,7 +206,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                             ? 'text-[#00ffaa]'
                                             : spectrumState === 'dropped_red'
                                             ? 'text-red-400'
-                                            : 'text-[#BDB2B2]'
+                                            : 'text-[#B5B5B5]'
                                     }`}
                                 >
                                     {spectrumState === 'peaking_green'
@@ -218,7 +223,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                         ? 'text-[#00ffaa]'
                                         : spectrumState === 'dropped_red'
                                         ? 'text-red-400'
-                                        : 'text-[#A69B9B]'
+                                        : 'text-[#9E9E9E]'
                                 }`}
                             >
                                 {spectrumState === 'peaking_green'
@@ -245,7 +250,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                                 ? 'bg-gradient-to-t from-[#059669] via-[#10b981] to-[#00ffaa] shadow-[0_0_8px_#00ffaa]'
                                                 : spectrumState === 'dropped_red'
                                                 ? 'bg-gradient-to-t from-red-950 via-red-800 to-red-500'
-                                                : 'bg-gradient-to-t from-[#c3195d] via-[#f70776] to-[#FAF6F6]'
+                                                : 'bg-gradient-to-t from-[#E04B0A] via-[#FF5D16] to-[#FDFDFC]'
                                         }`}
                                         style={{
                                             animation:
@@ -274,7 +279,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                     {/* 3. Form Section */}
                     <form onSubmit={handleSubmit} className="space-y-3.5">
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-[#A69B9B] mb-1">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-[#9E9E9E] mb-1">
                                 Email Address
                             </label>
                             <input
@@ -283,18 +288,18 @@ const LoginPage = ({ onLoginSuccess }) => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 placeholder="admin@soundscape.io"
-                                className={`w-full px-3.5 py-2.5 text-sm rounded-xl bg-[#141010] border text-white placeholder-[#6b6161] focus:outline-none transition-all ${
+                                className={`w-full px-3.5 py-2.5 text-sm rounded-xl bg-[#000000] border text-white placeholder-[#6B6B6B] focus:outline-none transition-all ${
                                     spectrumState === 'dropped_red'
                                         ? 'border-red-500 ring-1 ring-red-500/40 bg-red-950/20'
                                         : spectrumState === 'peaking_green'
                                         ? 'border-emerald-400 ring-1 ring-emerald-400/50 bg-emerald-950/20'
-                                        : 'border-[#2B2323] focus:border-[#f70776] focus:ring-1 focus:ring-[#f70776]'
+                                        : 'border-[#222222] focus:border-[#FF5D16] focus:ring-1 focus:ring-[#FF5D16]'
                                 }`}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-[#A69B9B] mb-1">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-[#9E9E9E] mb-1">
                                 Password
                             </label>
                             <input
@@ -303,12 +308,12 @@ const LoginPage = ({ onLoginSuccess }) => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 placeholder="••••••••"
-                                className={`w-full px-3.5 py-2.5 text-sm rounded-xl bg-[#141010] border text-white placeholder-[#6b6161] focus:outline-none transition-all ${
+                                className={`w-full px-3.5 py-2.5 text-sm rounded-xl bg-[#000000] border text-white placeholder-[#6B6B6B] focus:outline-none transition-all ${
                                     spectrumState === 'dropped_red'
                                         ? 'border-red-500 ring-1 ring-red-500/40 bg-red-950/20'
                                         : spectrumState === 'peaking_green'
                                         ? 'border-emerald-400 ring-1 ring-emerald-400/50 bg-emerald-950/20'
-                                        : 'border-[#2B2323] focus:border-[#f70776] focus:ring-1 focus:ring-[#f70776]'
+                                        : 'border-[#222222] focus:border-[#FF5D16] focus:ring-1 focus:ring-[#FF5D16]'
                                 }`}
                             />
                         </div>
@@ -321,7 +326,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                     ? 'bg-gradient-to-r from-emerald-500 to-[#00ffaa] text-black shadow-emerald-500/50 scale-[1.02]'
                                     : spectrumState === 'dropped_red'
                                     ? 'bg-red-600 text-white shadow-red-600/40'
-                                    : 'bg-[#f70776] hover:bg-[#c3195d] text-white shadow-[#f70776]/25 hover:-translate-y-0.5 active:translate-y-0'
+                                    : 'bg-[#FF5D16] hover:bg-[#E04B0A] text-white shadow-[#FF5D16]/25 hover:-translate-y-0.5 active:translate-y-0'
                             } disabled:opacity-75`}
                         >
                             {spectrumState === 'peaking_green' ? (

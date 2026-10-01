@@ -94,9 +94,9 @@ export default function SoundscapeBackground({
         amplitude: 45,
         frequency: 0.0035,
         speed: 0.02 * speed,
-        colorStart: "rgba(247, 7, 118, 0.45)",
-        colorEnd: "rgba(195, 25, 93, 0.0)",
-        strokeColor: "rgba(247, 7, 118, 0.85)",
+        colorStart: "rgba(255, 93, 22, 0.45)",
+        colorEnd: "rgba(255, 93, 22, 0.0)",
+        strokeColor: "rgba(255, 93, 22, 0.85)",
         strokeWidth: 2,
         noiseFreq: 0.008,
       },
@@ -105,9 +105,9 @@ export default function SoundscapeBackground({
         amplitude: 55,
         frequency: 0.0028,
         speed: -0.016 * speed,
-        colorStart: "rgba(195, 25, 93, 0.35)",
+        colorStart: "rgba(255, 93, 22, 0.35)",
         colorEnd: "rgba(120, 10, 80, 0.0)",
-        strokeColor: "rgba(247, 7, 118, 0.6)",
+        strokeColor: "rgba(255, 93, 22, 0.6)",
         strokeWidth: 1.5,
         noiseFreq: 0.006,
       },
@@ -117,7 +117,7 @@ export default function SoundscapeBackground({
         frequency: 0.0022,
         speed: 0.014 * speed,
         colorStart: "rgba(138, 43, 226, 0.3)",
-        colorEnd: "rgba(20, 16, 16, 0.0)",
+        colorEnd: "rgba(0, 0, 0, 0.0)",
         strokeColor: "rgba(180, 60, 255, 0.7)",
         strokeWidth: 2,
         noiseFreq: 0.005,
@@ -128,7 +128,7 @@ export default function SoundscapeBackground({
         frequency: 0.004,
         speed: -0.022 * speed,
         colorStart: "rgba(0, 240, 255, 0.2)",
-        colorEnd: "rgba(20, 16, 16, 0.0)",
+        colorEnd: "rgba(0, 0, 0, 0.0)",
         strokeColor: "rgba(0, 240, 255, 0.6)",
         strokeWidth: 1.2,
         noiseFreq: 0.009,
@@ -155,9 +155,9 @@ export default function SoundscapeBackground({
         glowY,
         Math.max(width, height) * 0.6
       );
-      radialGlow.addColorStop(0, "rgba(247, 7, 118, 0.14)");
+      radialGlow.addColorStop(0, "rgba(255, 93, 22, 0.14)");
       radialGlow.addColorStop(0.45, "rgba(138, 43, 226, 0.06)");
-      radialGlow.addColorStop(1, "rgba(20, 16, 16, 0)");
+      radialGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
       ctx.fillStyle = radialGlow;
       ctx.fillRect(0, 0, width, height);
 
@@ -169,9 +169,9 @@ export default function SoundscapeBackground({
         ctx.save();
         ctx.beginPath();
         ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(247, 7, 118, ${sw.opacity})`;
+        ctx.strokeStyle = `rgba(255, 93, 22, ${sw.opacity})`;
         ctx.lineWidth = 2.5;
-        ctx.shadowColor = "#F70776";
+        ctx.shadowColor = "#FF5D16";
         ctx.shadowBlur = 15;
         ctx.stroke();
         ctx.restore();
@@ -225,8 +225,8 @@ export default function SoundscapeBackground({
 
         const barY = height * 0.74;
         const grad = ctx.createLinearGradient(bar.x, barY - pulseHeight, bar.x, barY);
-        grad.addColorStop(0, "rgba(247, 7, 118, 0.6)");
-        grad.addColorStop(1, "rgba(247, 7, 118, 0.0)");
+        grad.addColorStop(0, "rgba(255, 93, 22, 0.6)");
+        grad.addColorStop(1, "rgba(255, 93, 22, 0.0)");
 
         ctx.fillStyle = grad;
         ctx.fillRect(bar.x, barY - pulseHeight, 2.5, pulseHeight);
@@ -267,7 +267,7 @@ export default function SoundscapeBackground({
         const waveGradient = ctx.createLinearGradient(0, baseY - wave.amplitude, 0, height);
         waveGradient.addColorStop(0, wave.colorStart);
         waveGradient.addColorStop(0.8, wave.colorEnd);
-        waveGradient.addColorStop(1, "rgba(20, 16, 16, 0.95)");
+        waveGradient.addColorStop(1, "rgba(0, 0, 0, 0.95)");
 
         ctx.fillStyle = waveGradient;
         ctx.fill();
